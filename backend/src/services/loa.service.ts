@@ -13,7 +13,9 @@ export class LOAService {
 
   async getAllLOARecords(): Promise<LOARecord[]> {
     try {
+      console.log(`Reading all LOA records from ${LOA_SHEET}...`);
       const rows = await this.sheetsService.readRange(`${LOA_SHEET}!A2:E`);
+      console.log(`Found ${rows.length} LOA record rows`);
       
       return rows.map((row, index) => ({
         id: `loa-${index + 2}`,
@@ -23,8 +25,12 @@ export class LOAService {
         reason: row[3] || '',
         status: (row[4] as any) || 'Active',
       }));
-    } catch (error) {
-      console.error('Failed to get LOA records:', error);
+    } catch (error: any) {
+      console.error('Failed to get LOA records:', {
+        error: error.message,
+        stack: error.stack,
+        sheet: LOA_SHEET,
+      });
       return [];
     }
   }
@@ -35,6 +41,14 @@ export class LOAService {
   }
 
   async createLOARecord(record: Omit<LOARecord, 'id'>): Promise<LOARecord> {
+    console.log('Creating LOA record:', {
+      supervisorName: record.supervisorName,
+      startDate: record.startDate,
+      endDate: record.endDate,
+      reason: record.reason,
+      status: record.status || 'Active',
+    });
+
     const newRow = [
       record.supervisorName,
       record.startDate,
@@ -44,28 +58,66 @@ export class LOAService {
     ];
 
     try {
+      console.log(`Attempting to append to ${LOA_SHEET} sheet...`);
       await this.sheetsService.appendRange(`${LOA_SHEET}!A:E`, [newRow]);
-    } catch (error) {
+      console.log('Successfully appended LOA record to sheet');
+    } catch (error: any) {
       // If sheet doesn't exist, create it first
-      console.error('LOA sheet might not exist, attempting to create header row');
-      await this.sheetsService.writeRange(`${LOA_SHEET}!A1:E1`, [
-        ['Supervisor Name', 'Start Date', 'End Date', 'Reason', 'Status']
-      ]);
-      await this.sheetsService.appendRange(`${LOA_SHEET}!A:E`, [newRow]);
+      console.error('Failed to append LOA record, attempting to create header row:', {
+        error: error.message,
+        sheet: LOA_SHEET,
+        stack: error.stack,
+      });
+      
+      try {
+        console.log(`Creating header row for ${LOA_SHEET} sheet...`);
+        await this.sheetsService.writeRange(`${LOA_SHEET}!A1:E1`, [
+          ['Supervisor Name', 'Start Date', 'End Date', 'Reason', 'Status']
+        ]);
+        console.log('Header row created successfully');
+        
+        console.log('Retrying append operation...');
+        await this.sheetsService.appendRange(`${LOA_SHEET}!A:E`, [newRow]);
+        console.log('Successfully appended LOA record after creating header');
+      } catch (retryError: any) {
+        console.error('Failed to create LOA record after retry:', {
+          error: retryError.message,
+          stack: retryError.stack,
+          sheet: LOA_SHEET,
+          data: newRow,
+        });
+        throw new Error(`Failed to create LOA record: ${retryError.message}`);
+      }
     }
     
     // Sync to Task Rotation tab
-    await this.syncToTaskRotation();
+    try {
+      console.log('Syncing LOA data to Task Rotation sheet...');
+      await this.syncToTaskRotation();
+      console.log('Successfully synced to Task Rotation sheet');
+    } catch (syncError: any) {
+      console.error('Failed to sync to Task Rotation sheet (non-fatal):', {
+        error: syncError.message,
+        stack: syncError.stack,
+      });
+      // Don't throw - this is a secondary operation
+    }
     
+    console.log('Fetching updated LOA records...');
     const records = await this.getAllLOARecords();
-    return records[records.length - 1];
+    const newRecord = records[records.length - 1];
+    console.log('LOA record created successfully:', newRecord);
+    return newRecord;
   }
 
   async updateLOARecord(id: string, updates: Partial<LOARecord>): Promise<LOARecord> {
     const rowNumber = parseInt(id.split('-')[1]);
+    console.log(`Updating LOA record at row ${rowNumber}:`, updates);
+    
     const currentRecord = await this.getLOARecord(id);
     
     if (!currentRecord) {
+      console.error(`LOA record not found: ${id}`);
       throw new Error('LOA record not found');
     }
 
@@ -79,27 +131,65 @@ export class LOAService {
       updatedRecord.status,
     ];
 
-    await this.sheetsService.writeRange(`${LOA_SHEET}!A${rowNumber}:E${rowNumber}`, [updatedRow]);
+    try {
+      console.log(`Writing updated LOA record to row ${rowNumber}...`);
+      await this.sheetsService.writeRange(`${LOA_SHEET}!A${rowNumber}:E${rowNumber}`, [updatedRow]);
+      console.log('Successfully updated LOA record');
+    } catch (error: any) {
+      console.error('Failed to update LOA record:', {
+        error: error.message,
+        stack: error.stack,
+        id,
+        rowNumber,
+        data: updatedRow,
+      });
+      throw new Error(`Failed to update LOA record: ${error.message}`);
+    }
     
     // Sync to Task Rotation tab
-    await this.syncToTaskRotation();
+    try {
+      console.log('Syncing to Task Rotation after update...');
+      await this.syncToTaskRotation();
+    } catch (syncError: any) {
+      console.error('Failed to sync after update (non-fatal):', syncError.message);
+    }
     
     return updatedRecord;
   }
 
   async deleteLOARecord(id: string): Promise<void> {
     const rowNumber = parseInt(id.split('-')[1]);
+    console.log(`Deleting LOA record at row ${rowNumber}...`);
     
-    const allRows = await this.sheetsService.readRange(`${LOA_SHEET}!A:E`);
-    allRows.splice(rowNumber - 1, 1);
-    
-    await this.sheetsService.clearRange(`${LOA_SHEET}!A2:E`);
-    if (allRows.length > 1) {
-      await this.sheetsService.writeRange(`${LOA_SHEET}!A2:E`, allRows.slice(1));
+    try {
+      const allRows = await this.sheetsService.readRange(`${LOA_SHEET}!A:E`);
+      console.log(`Total rows before delete: ${allRows.length}`);
+      
+      allRows.splice(rowNumber - 1, 1);
+      console.log(`Total rows after delete: ${allRows.length}`);
+      
+      await this.sheetsService.clearRange(`${LOA_SHEET}!A2:E`);
+      if (allRows.length > 1) {
+        await this.sheetsService.writeRange(`${LOA_SHEET}!A2:E`, allRows.slice(1));
+      }
+      console.log('Successfully deleted LOA record');
+    } catch (error: any) {
+      console.error('Failed to delete LOA record:', {
+        error: error.message,
+        stack: error.stack,
+        id,
+        rowNumber,
+      });
+      throw new Error(`Failed to delete LOA record: ${error.message}`);
     }
     
     // Sync to Task Rotation tab
-    await this.syncToTaskRotation();
+    try {
+      console.log('Syncing to Task Rotation after delete...');
+      await this.syncToTaskRotation();
+    } catch (syncError: any) {
+      console.error('Failed to sync after delete (non-fatal):', syncError.message);
+    }
   }
 
   async getActiveLOA(): Promise<LOARecord[]> {
@@ -109,16 +199,21 @@ export class LOAService {
 
   async syncToTaskRotation(): Promise<void> {
     try {
+      console.log(`Reading Task Rotation sheet: ${TASK_ROTATION_SHEET}...`);
       // Read all supervisors from Task Rotation sheet
       const taskRotationRows = await this.sheetsService.readRange(`${TASK_ROTATION_SHEET}!A2:E`);
+      console.log(`Found ${taskRotationRows.length} rows in Task Rotation sheet`);
       
       // Get all active LOA records
+      console.log('Fetching active LOA records...');
       const activeLOARecords = await this.getActiveLOA();
+      console.log(`Found ${activeLOARecords.length} active LOA records`);
       
       // Create a map of supervisor names to LOA records
       const loaMap = new Map<string, LOARecord>();
       activeLOARecords.forEach(loa => {
         loaMap.set(loa.supervisorName, loa);
+        console.log(`Mapped LOA for supervisor: ${loa.supervisorName}`);
       });
       
       // Update Task Rotation rows
@@ -130,6 +225,7 @@ export class LOAService {
         
         if (loaRecord) {
           // Supervisor has active LOA
+          console.log(`Setting LOA=TRUE for ${supervisorName}`);
           return [
             supervisorName,
             rank,
@@ -151,12 +247,19 @@ export class LOAService {
       
       // Write back to Task Rotation sheet
       if (updatedRows.length > 0) {
-        await this.sheetsService.writeRange(`${TASK_ROTATION_SHEET}!A2:E${updatedRows.length + 1}`, updatedRows);
+        const range = `${TASK_ROTATION_SHEET}!A2:E${updatedRows.length + 1}`;
+        console.log(`Writing ${updatedRows.length} updated rows to ${range}...`);
+        await this.sheetsService.writeRange(range, updatedRows);
+        console.log('Successfully synced LOA data to Task Rotation sheet');
+      } else {
+        console.log('No rows to update in Task Rotation sheet');
       }
-      
-      console.log('Successfully synced LOA data to Task Rotation sheet');
-    } catch (error) {
-      console.error('Failed to sync to Task Rotation sheet:', error);
+    } catch (error: any) {
+      console.error('Failed to sync to Task Rotation sheet:', {
+        error: error.message,
+        stack: error.stack,
+        sheet: TASK_ROTATION_SHEET,
+      });
       // Don't throw error - this is a secondary operation
     }
   }
