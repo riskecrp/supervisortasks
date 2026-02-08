@@ -45,8 +45,8 @@ export class LOAService {
       supervisorName: record.supervisorName,
       startDate: record.startDate,
       endDate: record.endDate,
-      reason: record.reason,
       status: record.status || 'Active',
+      // Reason omitted for privacy
     });
 
     const newRow = [
@@ -67,6 +67,7 @@ export class LOAService {
         error: error.message,
         sheet: LOA_SHEET,
         stack: error.stack,
+        // Data omitted for privacy
       });
       
       try {
@@ -84,7 +85,7 @@ export class LOAService {
           error: retryError.message,
           stack: retryError.stack,
           sheet: LOA_SHEET,
-          data: newRow,
+          // Data omitted for privacy
         });
         throw new Error(`Failed to create LOA record: ${retryError.message}`);
       }
@@ -106,13 +107,17 @@ export class LOAService {
     console.log('Fetching updated LOA records...');
     const records = await this.getAllLOARecords();
     const newRecord = records[records.length - 1];
-    console.log('LOA record created successfully:', newRecord);
+    console.log('LOA record created successfully with ID:', newRecord?.id);
     return newRecord;
   }
 
   async updateLOARecord(id: string, updates: Partial<LOARecord>): Promise<LOARecord> {
     const rowNumber = parseInt(id.split('-')[1]);
-    console.log(`Updating LOA record at row ${rowNumber}:`, updates);
+    console.log(`Updating LOA record at row ${rowNumber}`, {
+      id,
+      updatedFields: Object.keys(updates),
+      // Values omitted for privacy
+    });
     
     const currentRecord = await this.getLOARecord(id);
     
@@ -141,7 +146,7 @@ export class LOAService {
         stack: error.stack,
         id,
         rowNumber,
-        data: updatedRow,
+        // Data omitted for privacy
       });
       throw new Error(`Failed to update LOA record: ${error.message}`);
     }
