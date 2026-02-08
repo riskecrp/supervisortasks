@@ -23,7 +23,7 @@ const DiscussionsPage = () => {
     datePosted: new Date().toISOString().split('T')[0],
   });
 
-  const activeSupervisors = supervisors?.filter(s => s.active) || [];
+  const activeSupervisors = supervisors?.filter(s => s.active && !s.onLOA) || [];
 
   const handleOpenModal = () => {
     setFormData({

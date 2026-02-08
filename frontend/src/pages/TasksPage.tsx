@@ -31,7 +31,7 @@ const TasksPage = () => {
     status: 'Assigned' as Task['status'],
   });
 
-  const activeSupervisors = supervisors?.filter(s => s.active) || [];
+  const activeSupervisors = supervisors?.filter(s => s.active && !s.onLOA) || [];
 
   const statusOptions: Task['status'][] = [
     'Assigned',
