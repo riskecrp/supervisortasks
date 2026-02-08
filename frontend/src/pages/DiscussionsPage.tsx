@@ -94,7 +94,7 @@ const DiscussionsPage = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead className="whitespace-nowrap">Date</TableHead>
-                  <TableHead className="min-w-[300px]">Topic</TableHead>
+                  <TableHead className="min-w-[400px]">Topic</TableHead>
                   <TableHead>Link</TableHead>
                   {activeSupervisors.map(sup => (
                     <TableHead key={sup.name} className="text-center whitespace-nowrap">
@@ -117,7 +117,7 @@ const DiscussionsPage = () => {
                       <TableCell className="whitespace-nowrap">
                         {new Date(discussion.datePosted).toLocaleDateString()}
                       </TableCell>
-                      <TableCell className="font-medium min-w-[300px] max-w-[500px] break-words">
+                      <TableCell className="font-medium min-w-[400px] max-w-[600px] break-words">
                         {discussion.topic}
                       </TableCell>
                       <TableCell>

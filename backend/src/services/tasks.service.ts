@@ -2,7 +2,7 @@ import { SheetsService } from './sheets.service';
 import { Task } from '../types';
 
 const TASKS_SHEET = 'Tasks';
-const TASK_HISTORY_SHEET = 'Task History';
+const TASK_HISTORY_SHEET = "'Task History'";
 
 export class TasksService {
   private sheetsService: SheetsService;

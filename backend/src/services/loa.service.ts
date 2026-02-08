@@ -1,7 +1,7 @@
 import { SheetsService } from './sheets.service';
 import { LOARecord } from '../types';
 
-const LOA_SHEET = 'LOA Tracking';
+const LOA_SHEET = "'LOA Tracking'";
 
 export class LOAService {
   private sheetsService: SheetsService;

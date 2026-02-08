@@ -2,7 +2,7 @@ import { SheetsService } from './sheets.service';
 import { Supervisor } from '../types';
 import { DiscussionsService } from './discussions.service';
 
-const DISCUSSIONS_SHEET = 'Discussions Pending Feedback';
+const DISCUSSIONS_SHEET = "'Discussions Pending Feedback'";
 
 export class SupervisorsService {
   private sheetsService: SheetsService;
@@ -76,7 +76,7 @@ export class SupervisorsService {
 
   private async getLOARecords(): Promise<any[][]> {
     try {
-      return await this.sheetsService.readRange('LOA Tracking!A2:E');
+      return await this.sheetsService.readRange("'LOA Tracking'!A2:E");
     } catch (error) {
       // LOA sheet might not exist yet
       return [];
