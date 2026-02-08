@@ -202,7 +202,7 @@ const AnalyticsPage = () => {
             <table className="min-w-full divide-y divide-gray-700">
               <thead className="bg-gray-900/30">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider min-w-[200px]">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider min-w-[300px]">
                     Supervisor
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
@@ -225,7 +225,7 @@ const AnalyticsPage = () => {
               <tbody className="bg-gray-800 divide-y divide-gray-700">
                 {analytics?.supervisorMetrics?.map((supervisor) => (
                   <tr key={supervisor.name} className={supervisor.onLOA ? 'bg-orange-900' : ''}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-100 min-w-[200px]">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-100 min-w-[300px]">
                       {supervisor.name}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-100">
