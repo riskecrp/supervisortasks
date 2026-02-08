@@ -88,30 +88,35 @@ export class AnalyticsService {
     startOfWeek.setDate(now.getDate() - now.getDay());
 
     return supervisors.map(supervisor => {
-      // Count all tasks claimed by this supervisor from the Tasks sheet
-      const supervisorTasksClaimed = tasks.filter(
+      // Count all tasks currently claimed by this supervisor from the Tasks sheet
+      const supervisorTasks = tasks.filter(
         t => t.claimedBy === supervisor.name
       );
 
-      // Get completed tasks from task history for time-based metrics
-      const supervisorHistoryTasks = taskHistory.filter(
-        t => t.supervisor === supervisor.name
-      );
-
-      const totalCompleted = supervisorHistoryTasks.length;
+      // Count completed tasks
+      const completedTasks = supervisorTasks.filter(t => t.status === 'Completed');
+      const totalCompleted = completedTasks.length;
       
-      const thisMonth = supervisorHistoryTasks.filter(t => {
+      // Count tasks completed this month
+      const thisMonth = completedTasks.filter(t => {
+        if (!t.completedDate) return false;
         const completedDate = new Date(t.completedDate);
         return completedDate >= startOfMonth;
       }).length;
 
-      const thisWeek = supervisorHistoryTasks.filter(t => {
+      // Count tasks completed this week
+      const thisWeek = completedTasks.filter(t => {
+        if (!t.completedDate) return false;
         const completedDate = new Date(t.completedDate);
         return completedDate >= startOfWeek;
       }).length;
 
+      // Get completion metrics from task history for accurate duration tracking
+      const supervisorHistoryTasks = taskHistory.filter(
+        t => t.supervisor === supervisor.name
+      );
       const totalDays = supervisorHistoryTasks.reduce((sum, t) => sum + (t.durationDays || 0), 0);
-      const averageCompletionDays = totalCompleted > 0 ? totalDays / totalCompleted : 0;
+      const averageCompletionDays = supervisorHistoryTasks.length > 0 ? totalDays / supervisorHistoryTasks.length : 0;
 
       return {
         name: supervisor.name,
