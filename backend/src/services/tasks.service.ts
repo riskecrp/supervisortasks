@@ -17,7 +17,7 @@ export class TasksService {
     // Track actual row numbers before filtering
     const rowsWithIndex = rows.map((row, index) => ({
       row,
-      actualRowNumber: index + 2 // +2 because sheet rows start at 1 and we skip header
+      actualRowNumber: index + 2 // +2 because sheets use 1-based indexing (not 0-based) and row 1 is the header
     }));
     
     // Filter out empty rows

@@ -98,6 +98,7 @@ export class AnalyticsService {
 
     return supervisors.map(supervisor => {
       // Count completed tasks directly from Tasks sheet where status = "Completed" and taskOwner exists
+      // This gives the most accurate current count of all completed tasks
       const completedTasksFromSheet = tasks.filter(
         t => t.taskOwner && 
              t.taskOwner.trim() === supervisor.name && 
@@ -107,8 +108,10 @@ export class AnalyticsService {
       
       const totalCompleted = completedTasksFromSheet.length;
       
-      // For month/week metrics, we need to use task history since Tasks sheet doesn't track completion dates
-      // Note: If a task is marked completed but not in history yet, it won't be counted in these metrics
+      // For time-based metrics (thisMonth, thisWeek) and average completion days,
+      // we use Task History which is populated when a task's status changes to "Completed"
+      // Note: There may be a brief delay between marking completed and history entry creation
+      // This means totalCompleted (from Tasks sheet) may be slightly higher than history counts
       const completedTasksFromHistory = taskHistory.filter(
         h => h.supervisor === supervisor.name
       );
@@ -127,6 +130,7 @@ export class AnalyticsService {
       }).length;
 
       // Calculate average completion days from task history
+      // Uses history count as denominator since only history has duration data
       const totalDays = completedTasksFromHistory.reduce((sum, h) => {
         return sum + (h.durationDays || 0);
       }, 0);
