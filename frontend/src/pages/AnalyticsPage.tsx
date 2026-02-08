@@ -225,7 +225,7 @@ const AnalyticsPage = () => {
               <tbody className="bg-gray-800 divide-y divide-gray-700">
                 {analytics?.supervisorMetrics?.map((supervisor) => (
                   <tr key={supervisor.name} className={supervisor.onLOA ? 'bg-orange-900' : ''}>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-100 min-w-[200px]">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-100 min-w-[200px]">
                       {supervisor.name}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-100">
