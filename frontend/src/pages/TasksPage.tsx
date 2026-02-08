@@ -105,6 +105,13 @@ const TasksPage = () => {
     }
   };
 
+  const handleStatusChange = (taskId: string, newStatus: string) => {
+    updateTask.mutate({ 
+      id: taskId, 
+      updates: { status: newStatus } 
+    });
+  };
+
   const isTaskOverdue = (task: Task): boolean => {
     // Task is overdue if: not completed AND has been open for more than 5 days
     if (task.status === 'Completed') {
@@ -226,10 +233,7 @@ const TasksPage = () => {
                       <TableCell>
                         <Select
                           value={task.status}
-                          onChange={(e) => updateTask.mutateAsync({ 
-                            id: task.id, 
-                            updates: { status: e.target.value } 
-                          })}
+                          onChange={(e) => handleStatusChange(task.id, e.target.value)}
                           options={statuses.map(s => ({ value: s, label: s }))}
                           className="min-w-[200px]"
                         />
