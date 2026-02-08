@@ -1,10 +1,11 @@
 export interface Task {
   id: string;
-  task: string;
-  claimedBy: string;
+  taskList: string;
+  taskOwner: string;
   status: string;
-  completedDate?: string;
-  createdDate: string;
+  claimedDate: string;
+  dueDate: string;
+  notes: string;
 }
 
 export interface Discussion {

@@ -82,39 +82,34 @@ export class AnalyticsService {
     const startOfWeek = new Date(now);
     startOfWeek.setDate(now.getDate() - now.getDay());
 
-    return supervisors.map(supervisor => {
-      // Count all tasks currently claimed by this supervisor from the Tasks sheet
-      const supervisorTasks = tasks.filter(
-        t => t.claimedBy === supervisor.name
-      );
+    // Get task history for completion metrics
+    const taskHistory = await this.tasksService.getTaskHistory();
 
-      // Count completed tasks - by number of times name appears with status = Completed
-      const completedTasks = supervisorTasks.filter(t => t.status === 'Completed');
+    return supervisors.map(supervisor => {
+      // Get completed tasks from history
+      const completedTasks = taskHistory.filter(
+        h => h.supervisor === supervisor.name
+      );
+      
       const totalCompleted = completedTasks.length;
       
       // Count tasks completed this month
-      const thisMonth = completedTasks.filter(t => {
-        if (!t.completedDate) return false;
-        const completedDate = new Date(t.completedDate);
+      const thisMonth = completedTasks.filter(h => {
+        if (!h.completedDate) return false;
+        const completedDate = new Date(h.completedDate);
         return completedDate >= startOfMonth;
       }).length;
 
       // Count tasks completed this week
-      const thisWeek = completedTasks.filter(t => {
-        if (!t.completedDate) return false;
-        const completedDate = new Date(t.completedDate);
+      const thisWeek = completedTasks.filter(h => {
+        if (!h.completedDate) return false;
+        const completedDate = new Date(h.completedDate);
         return completedDate >= startOfWeek;
       }).length;
 
-      // Calculate average completion days from Tasks sheet
-      // Duration = completedDate - createdDate for each completed task
-      const totalDays = completedTasks.reduce((sum, task) => {
-        if (!task.completedDate || !task.createdDate) return sum;
-        const completedDate = new Date(task.completedDate);
-        const createdDate = new Date(task.createdDate);
-        const durationDays = Math.floor((completedDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
-        // Only count if duration is non-negative (completedDate >= createdDate)
-        return durationDays >= 0 ? sum + durationDays : sum;
+      // Calculate average completion days from task history
+      const totalDays = completedTasks.reduce((sum, h) => {
+        return sum + (h.durationDays || 0);
       }, 0);
       const averageCompletionDays = totalCompleted > 0 ? totalDays / totalCompleted : 0;
 
