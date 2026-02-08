@@ -14,7 +14,18 @@ export class TasksService {
   async getAllTasks(): Promise<Task[]> {
     const rows = await this.sheetsService.readRange(`${TASKS_SHEET}!A2:E`);
     
-    return rows.map((row, index) => ({
+    // Filter out empty rows
+    const filteredRows = rows.filter(row => {
+      // Check if all values are empty/null/undefined
+      const allEmpty = row.every(cell => !cell || cell.toString().trim() === '');
+      // Check if the first column (task name) is empty
+      const taskEmpty = !row[0] || row[0].toString().trim() === '';
+      
+      // Row is valid if it's not completely empty AND has a task name
+      return !allEmpty && !taskEmpty;
+    });
+    
+    return filteredRows.map((row, index) => ({
       id: `task-${index + 2}`,
       task: row[0] || '',
       claimedBy: row[1] || '',

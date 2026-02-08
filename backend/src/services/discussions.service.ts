@@ -20,7 +20,18 @@ export class DiscussionsService {
     const headers = rows[0];
     const supervisors = headers.slice(3); // Supervisors start from column D (index 3)
 
-    return rows.slice(1).map((row, index) => {
+    // Filter out empty rows (skip header row)
+    const dataRows = rows.slice(1).filter(row => {
+      // Check if all values are empty/null/undefined
+      const allEmpty = row.every(cell => !cell || cell.toString().trim() === '');
+      // Check if the topic (second column) is empty
+      const topicEmpty = !row[1] || row[1].toString().trim() === '';
+      
+      // Row is valid if it's not completely empty AND has a topic
+      return !allEmpty && !topicEmpty;
+    });
+
+    return dataRows.map((row, index) => {
       const supervisorFeedback: Record<string, boolean> = {};
       
       supervisors.forEach((supervisor, i) => {
