@@ -9,7 +9,7 @@ interface TableProps {
 export const Table = ({ children, className }: TableProps) => {
   return (
     <div className="overflow-x-auto">
-      <table className={cn('min-w-full divide-y divide-gray-200', className)}>
+      <table className={cn('min-w-full divide-y divide-gray-700', className)}>
         {children}
       </table>
     </div>
@@ -18,7 +18,7 @@ export const Table = ({ children, className }: TableProps) => {
 
 export const TableHeader = ({ children, className }: TableProps) => {
   return (
-    <thead className={cn('bg-gray-50', className)}>
+    <thead className={cn('bg-gray-900', className)}>
       {children}
     </thead>
   );
@@ -26,7 +26,7 @@ export const TableHeader = ({ children, className }: TableProps) => {
 
 export const TableBody = ({ children, className }: TableProps) => {
   return (
-    <tbody className={cn('bg-white divide-y divide-gray-200', className)}>
+    <tbody className={cn('bg-gray-800 divide-y divide-gray-700', className)}>
       {children}
     </tbody>
   );
@@ -34,7 +34,7 @@ export const TableBody = ({ children, className }: TableProps) => {
 
 export const TableRow = ({ children, className }: TableProps) => {
   return (
-    <tr className={cn('hover:bg-gray-50', className)}>
+    <tr className={cn('hover:bg-gray-700', className)}>
       {children}
     </tr>
   );
@@ -42,7 +42,7 @@ export const TableRow = ({ children, className }: TableProps) => {
 
 export const TableHead = ({ children, className }: TableProps) => {
   return (
-    <th className={cn('px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider', className)}>
+    <th className={cn('px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider', className)}>
       {children}
     </th>
   );
@@ -55,7 +55,7 @@ interface TableCellProps extends React.TdHTMLAttributes<HTMLTableCellElement> {
 
 export const TableCell = ({ children, className, ...props }: TableCellProps) => {
   return (
-    <td className={cn('px-6 py-4 whitespace-nowrap text-sm text-gray-900', className)} {...props}>
+    <td className={cn('px-6 py-4 whitespace-nowrap text-sm text-gray-100', className)} {...props}>
       {children}
     </td>
   );

@@ -22,11 +22,11 @@ export const Navbar = () => {
   ];
 
   return (
-    <nav className="bg-white shadow-sm border-b border-gray-200">
+    <nav className="bg-gray-800 shadow-sm border-b border-gray-700">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
-            <h1 className="text-xl font-bold text-gray-900">
+            <h1 className="text-xl font-bold text-gray-100">
               Supervisor Tasks
             </h1>
           </div>
@@ -42,8 +42,8 @@ export const Navbar = () => {
                   className={cn(
                     'inline-flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
                     isActive
-                      ? 'bg-blue-50 text-blue-700'
-                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                      ? 'bg-blue-900/50 text-blue-400'
+                      : 'text-gray-300 hover:bg-gray-700 hover:text-gray-100'
                   )}
                 >
                   <Icon className="w-4 h-4 mr-2" />
