@@ -20,34 +20,35 @@ export class DiscussionsService {
     const headers = rows[0];
     const supervisors = headers.slice(3); // Supervisors start from column D (index 3)
 
-    // Filter out empty rows (skip header row)
-    const dataRows = rows.slice(1).filter(row => {
+    // Filter out empty rows while tracking original row numbers (skip header row)
+    const discussions: Discussion[] = [];
+    rows.slice(1).forEach((row, index) => {
       // Check if all values are empty/null/undefined
       const allEmpty = row.every(cell => !cell || cell.toString().trim() === '');
       // Check if the topic (second column) is empty
       const topicEmpty = !row[1] || row[1].toString().trim() === '';
       
-      // Row is valid if it's not completely empty AND has a topic
-      return !allEmpty && !topicEmpty;
+      // Only include row if it's not completely empty AND has a topic
+      if (!allEmpty && !topicEmpty) {
+        const supervisorFeedback: Record<string, boolean> = {};
+        
+        supervisors.forEach((supervisor, i) => {
+          if (supervisor) {
+            supervisorFeedback[supervisor] = row[3 + i] === 'TRUE' || row[3 + i] === true || row[3 + i] === 'YES';
+          }
+        });
+
+        discussions.push({
+          id: `discussion-${index + 2}`, // Use original row number (index + 2 because row 1 is header, so data starts at row 2)
+          datePosted: row[0] || '',
+          topic: row[1] || '',
+          link: row[2] || '',
+          supervisorFeedback,
+        });
+      }
     });
 
-    return dataRows.map((row, index) => {
-      const supervisorFeedback: Record<string, boolean> = {};
-      
-      supervisors.forEach((supervisor, i) => {
-        if (supervisor) {
-          supervisorFeedback[supervisor] = row[3 + i] === 'TRUE' || row[3 + i] === true || row[3 + i] === 'YES';
-        }
-      });
-
-      return {
-        id: `discussion-${index + 2}`,
-        datePosted: row[0] || '',
-        topic: row[1] || '',
-        link: row[2] || '',
-        supervisorFeedback,
-      };
-    });
+    return discussions;
   }
 
   async getDiscussion(id: string): Promise<Discussion | null> {
