@@ -119,4 +119,22 @@ export class SheetsService {
       throw new Error(`Failed to get sheet metadata: ${error.message}`);
     }
   }
+
+  async findRow(range: string, columnIndex: number, value: string): Promise<number | null> {
+    try {
+      const rows = await this.readRange(range);
+      for (let i = 0; i < rows.length; i++) {
+        if (rows[i][columnIndex] === value) {
+          // Extract start row from range (e.g., "Sheet!A2:E" -> 2, "Sheet!B3:D10" -> 3)
+          const rangeMatch = range.match(/!([A-Z]+)(\d+)/);
+          const startRow = rangeMatch ? parseInt(rangeMatch[2]) : 1;
+          return startRow + i;
+        }
+      }
+      return null;
+    } catch (error: any) {
+      console.error(`Error finding row in ${range}:`, error.message);
+      return null;
+    }
+  }
 }

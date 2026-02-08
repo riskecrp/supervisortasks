@@ -2,7 +2,7 @@ export interface Task {
   id: string;
   task: string;
   claimedBy: string;
-  status: 'Not Started' | 'In Progress' | 'Completed';
+  status: string;
   completedDate?: string;
   createdDate: string;
 }
@@ -40,6 +40,12 @@ export interface Analytics {
   supervisorsOnLOA: number;
   completionRate: number;
   supervisorMetrics: SupervisorMetrics[];
+  workloadDistribution?: {
+    averageTasksPerSupervisor: number;
+    highestWorkload: { name: string; taskCount: number };
+    lowestWorkload: { name: string; taskCount: number };
+    distributionStdDev: number;
+  };
 }
 
 export interface SupervisorMetrics {

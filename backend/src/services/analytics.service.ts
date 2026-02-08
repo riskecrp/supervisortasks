@@ -42,6 +42,9 @@ export class AnalyticsService {
     const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
     const supervisorMetrics = await this.calculateSupervisorMetrics(supervisors, taskHistory);
+    
+    // Calculate workload distribution
+    const workloadDistribution = this.calculateWorkloadDistribution(supervisorMetrics);
 
     return {
       totalTasks,
@@ -53,6 +56,7 @@ export class AnalyticsService {
       supervisorsOnLOA,
       completionRate,
       supervisorMetrics,
+      workloadDistribution,
     };
   }
 
@@ -104,9 +108,52 @@ export class AnalyticsService {
         totalCompleted,
         thisMonth,
         thisWeek,
-        averageCompletionDays: Math.round(averageCompletionDays * 10) / 10,
+        averageCompletionDays: this.roundToOneDecimal(averageCompletionDays),
         onLOA: supervisor.onLOA || false,
       };
     });
+  }
+
+  private roundToOneDecimal(value: number): number {
+    return Math.round(value * 10) / 10;
+  }
+
+  private calculateWorkloadDistribution(metrics: SupervisorMetrics[]) {
+    if (metrics.length === 0) {
+      return {
+        averageTasksPerSupervisor: 0,
+        highestWorkload: { name: '', taskCount: 0 },
+        lowestWorkload: { name: '', taskCount: 0 },
+        distributionStdDev: 0,
+      };
+    }
+
+    const taskCounts = metrics.map(m => m.totalCompleted);
+    const totalCompleted = taskCounts.reduce((sum, count) => sum + count, 0);
+    const averageTasksPerSupervisor = totalCompleted / metrics.length;
+
+    // Find highest and lowest workload
+    const sortedMetrics = [...metrics].sort((a, b) => b.totalCompleted - a.totalCompleted);
+    const highestWorkload = {
+      name: sortedMetrics[0]?.name || '',
+      taskCount: sortedMetrics[0]?.totalCompleted || 0,
+    };
+    const lowestWorkload = {
+      name: sortedMetrics[sortedMetrics.length - 1]?.name || '',
+      taskCount: sortedMetrics[sortedMetrics.length - 1]?.totalCompleted || 0,
+    };
+
+    // Calculate standard deviation
+    const variance = taskCounts.reduce((sum, count) => {
+      return sum + Math.pow(count - averageTasksPerSupervisor, 2);
+    }, 0) / taskCounts.length;
+    const distributionStdDev = Math.sqrt(variance);
+
+    return {
+      averageTasksPerSupervisor: this.roundToOneDecimal(averageTasksPerSupervisor),
+      highestWorkload,
+      lowestWorkload,
+      distributionStdDev: this.roundToOneDecimal(distributionStdDev),
+    };
   }
 }

@@ -18,6 +18,7 @@ export const tasksAPI = {
   update: (id: string, updates: Partial<Task>) => api.put<Task>(`/tasks/${id}`, updates),
   delete: (id: string) => api.delete(`/tasks/${id}`),
   getHistory: () => api.get('/tasks/history/all'),
+  getAvailableStatuses: () => api.get<string[]>('/tasks/statuses/available'),
 };
 
 // Discussions API

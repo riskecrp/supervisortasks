@@ -8,13 +8,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Modal } from '../components/ui/Modal';
 import { Badge } from '../components/ui/Badge';
 import { Loading } from '../components/ui/Loading';
-import { useTasks, useCreateTask, useUpdateTask, useDeleteTask } from '../hooks/useTasks';
+import { useTasks, useCreateTask, useUpdateTask, useDeleteTask, useAvailableStatuses } from '../hooks/useTasks';
 import { useSupervisors } from '../hooks/useSupervisors';
 import type { Task } from '../types';
 
 const TasksPage = () => {
   const { data: tasks, isLoading } = useTasks();
   const { data: supervisors } = useSupervisors();
+  const { data: availableStatuses } = useAvailableStatuses();
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
@@ -28,10 +29,11 @@ const TasksPage = () => {
   const [formData, setFormData] = useState({
     task: '',
     claimedBy: '',
-    status: 'Not Started' as Task['status'],
+    status: 'Not Started',
   });
 
   const activeSupervisors = supervisors?.filter(s => s.active) || [];
+  const statuses = availableStatuses || ['Not Started', 'In Progress', 'Completed'];
 
   const filteredTasks = tasks?.filter(task => {
     const matchesStatus = statusFilter === 'all' || task.status === statusFilter;
@@ -53,7 +55,7 @@ const TasksPage = () => {
       setFormData({
         task: '',
         claimedBy: activeSupervisors[0]?.name || '',
-        status: 'Not Started',
+        status: statuses[0] || 'Not Started',
       });
     }
     setIsModalOpen(true);
@@ -62,16 +64,27 @@ const TasksPage = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingTask(null);
-    setFormData({ task: '', claimedBy: '', status: 'Not Started' });
+    setFormData({ task: '', claimedBy: '', status: statuses[0] || 'Not Started' });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Check if status is changing to "Completed"
+    const isNewlyCompleted = formData.status === 'Completed' && 
+                            (!editingTask || editingTask.status !== 'Completed');
+    
+    // Clear completed date if status is no longer "Completed"
+    const isNoLongerCompleted = editingTask && 
+                                editingTask.status === 'Completed' && 
+                                formData.status !== 'Completed';
+    
     const taskData = {
       ...formData,
-      completedDate: formData.status === 'Completed' ? new Date().toISOString() : undefined,
-      createdDate: editingTask?.createdDate || new Date().toISOString(),
+      completedDate: isNewlyCompleted 
+        ? new Date().toISOString().split('T')[0] 
+        : (isNoLongerCompleted ? undefined : editingTask?.completedDate),
+      createdDate: editingTask?.createdDate || new Date().toISOString().split('T')[0],
     };
 
     if (editingTask) {
@@ -88,13 +101,27 @@ const TasksPage = () => {
     }
   };
 
-  const getStatusBadge = (status: Task['status']) => {
-    const variants = {
-      'Not Started': 'default' as const,
-      'In Progress': 'warning' as const,
-      'Completed': 'success' as const,
+  const isTaskOverdue = (task: Task): boolean => {
+    // Task is overdue if: not completed AND current date > (created date + 5 days)
+    if (task.status === 'Completed') {
+      return false;
+    }
+    
+    const createdDate = new Date(task.createdDate);
+    const currentDate = new Date();
+    const daysElapsed = Math.floor((currentDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    return daysElapsed > 5;
+  };
+
+  const getStatusBadge = (status: string) => {
+    // Default to 'default' variant for unknown statuses
+    const variants: Record<string, 'default' | 'warning' | 'success'> = {
+      'Not Started': 'default',
+      'In Progress': 'warning',
+      'Completed': 'success',
     };
-    return <Badge variant={variants[status]}>{status}</Badge>;
+    return <Badge variant={variants[status] || 'default'}>{status}</Badge>;
   };
 
   if (isLoading) {
@@ -138,9 +165,7 @@ const TasksPage = () => {
                 onChange={(e) => setStatusFilter(e.target.value)}
                 options={[
                   { value: 'all', label: 'All Statuses' },
-                  { value: 'Not Started', label: 'Not Started' },
-                  { value: 'In Progress', label: 'In Progress' },
-                  { value: 'Completed', label: 'Completed' },
+                  ...statuses.map(s => ({ value: s, label: s })),
                 ]}
                 className="w-40"
               />
@@ -176,39 +201,45 @@ const TasksPage = () => {
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredTasks.map((task) => (
-                  <TableRow key={task.id}>
-                    <TableCell className="font-medium">{task.task}</TableCell>
-                    <TableCell>{task.claimedBy}</TableCell>
-                    <TableCell>{getStatusBadge(task.status)}</TableCell>
-                    <TableCell>
-                      {new Date(task.createdDate).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      {task.completedDate
-                        ? new Date(task.completedDate).toLocaleDateString()
-                        : '-'}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleOpenModal(task)}
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(task.id)}
-                        >
-                          <Trash2 className="w-4 h-4 text-red-600" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
+                filteredTasks.map((task) => {
+                  const isOverdue = isTaskOverdue(task);
+                  return (
+                    <TableRow 
+                      key={task.id}
+                      className={isOverdue ? 'bg-red-50 hover:bg-red-100' : ''}
+                    >
+                      <TableCell className="font-medium">{task.task}</TableCell>
+                      <TableCell>{task.claimedBy}</TableCell>
+                      <TableCell>{getStatusBadge(task.status)}</TableCell>
+                      <TableCell>
+                        {new Date(task.createdDate).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        {task.completedDate
+                          ? new Date(task.completedDate).toLocaleDateString()
+                          : '-'}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleOpenModal(task)}
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(task.id)}
+                          >
+                            <Trash2 className="w-4 h-4 text-red-600" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>
@@ -237,12 +268,8 @@ const TasksPage = () => {
           <Select
             label="Status"
             value={formData.status}
-            onChange={(e) => setFormData({ ...formData, status: e.target.value as Task['status'] })}
-            options={[
-              { value: 'Not Started', label: 'Not Started' },
-              { value: 'In Progress', label: 'In Progress' },
-              { value: 'Completed', label: 'Completed' },
-            ]}
+            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+            options={statuses.map(s => ({ value: s, label: s }))}
             required
           />
           <div className="flex justify-end gap-3 mt-6">

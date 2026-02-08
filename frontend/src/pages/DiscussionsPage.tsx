@@ -89,7 +89,7 @@ const DiscussionsPage = () => {
           <CardTitle>Discussion Feedback Tracker</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto max-h-[70vh]">
             <Table>
               <TableHeader>
                 <TableRow>

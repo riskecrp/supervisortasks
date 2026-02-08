@@ -81,6 +81,58 @@ const AnalyticsPage = () => {
         </Card>
       </div>
 
+      {analytics?.workloadDistribution && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <p className="text-sm font-medium text-gray-600">Avg Tasks/Supervisor</p>
+                <p className="text-4xl font-bold text-indigo-600 mt-2">
+                  {analytics.workloadDistribution.averageTasksPerSupervisor.toFixed(1)}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <p className="text-sm font-medium text-gray-600">Highest Workload</p>
+                <p className="text-2xl font-bold text-orange-600 mt-2">
+                  {analytics.workloadDistribution.highestWorkload.name}
+                </p>
+                <p className="text-lg text-gray-500">
+                  {analytics.workloadDistribution.highestWorkload.taskCount} tasks
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <p className="text-sm font-medium text-gray-600">Lowest Workload</p>
+                <p className="text-2xl font-bold text-teal-600 mt-2">
+                  {analytics.workloadDistribution.lowestWorkload.name}
+                </p>
+                <p className="text-lg text-gray-500">
+                  {analytics.workloadDistribution.lowestWorkload.taskCount} tasks
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <p className="text-sm font-medium text-gray-600">Distribution Balance</p>
+                <p className="text-4xl font-bold text-pink-600 mt-2">
+                  {analytics.workloadDistribution.distributionStdDev.toFixed(1)}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">Standard Deviation</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
