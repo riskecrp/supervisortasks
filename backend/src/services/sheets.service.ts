@@ -18,10 +18,14 @@ export class SheetsService {
       });
     } else if (process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL && process.env.GOOGLE_PRIVATE_KEY) {
       // Use environment variables
+      const privateKey = process.env.GOOGLE_PRIVATE_KEY;
+      if (!privateKey) {
+        throw new Error('GOOGLE_PRIVATE_KEY is required but not set');
+      }
       auth = new google.auth.GoogleAuth({
         credentials: {
           client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-          private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+          private_key: privateKey.replace(/\\n/g, '\n'),
         },
         scopes: ['https://www.googleapis.com/auth/spreadsheets'],
       });
