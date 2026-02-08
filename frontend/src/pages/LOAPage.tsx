@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
@@ -99,33 +98,29 @@ const LOAPage = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-sm font-medium text-gray-600">Currently On Leave</p>
-              <p className="text-4xl font-bold text-orange-600 mt-2">
-                {activeRecords?.length || 0}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-sm font-medium text-gray-600">Total LOA Records</p>
-              <p className="text-4xl font-bold text-gray-900 mt-2">
-                {loaRecords?.length || 0}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="text-center">
+            <p className="text-sm font-medium text-gray-600">Currently On Leave</p>
+            <p className="text-4xl font-bold text-orange-600 mt-2">
+              {activeRecords?.length || 0}
+            </p>
+          </div>
+        </div>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="text-center">
+            <p className="text-sm font-medium text-gray-600">Total LOA Records</p>
+            <p className="text-4xl font-bold text-gray-900 mt-2">
+              {loaRecords?.length || 0}
+            </p>
+          </div>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>LOA Records</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900">LOA Records</h3>
+        </div>
+        <div>
           <Table>
             <TableHeader>
               <TableRow>
@@ -183,8 +178,8 @@ const LOAPage = () => {
               )}
             </TableBody>
           </Table>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <Modal
         isOpen={isModalOpen}
