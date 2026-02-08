@@ -12,7 +12,7 @@ export class TasksService {
   }
 
   async getAllTasks(): Promise<Task[]> {
-    const rows = await this.sheetsService.readRange(this.sheetsService.buildRange(TASKS_SHEET, 'A2:E'));
+    const rows = await this.sheetsService.readRange(this.sheetsService.buildRange(TASKS_SHEET, 'A2:E1000'));
     
     // Filter out empty rows while tracking original row numbers
     const tasks: Task[] = [];
@@ -100,9 +100,9 @@ export class TasksService {
     allRows.splice(rowNumber - 1, 1);
     
     // Clear and rewrite
-    await this.sheetsService.clearRange(this.sheetsService.buildRange(TASKS_SHEET, 'A2:E'));
+    await this.sheetsService.clearRange(this.sheetsService.buildRange(TASKS_SHEET, 'A2:E1000'));
     if (allRows.length > 1) {
-      await this.sheetsService.writeRange(this.sheetsService.buildRange(TASKS_SHEET, 'A2:E'), allRows.slice(1));
+      await this.sheetsService.writeRange(this.sheetsService.buildRange(TASKS_SHEET, 'A2:E1000'), allRows.slice(1));
     }
   }
 
@@ -132,7 +132,7 @@ export class TasksService {
 
   async getTaskHistory(): Promise<any[]> {
     try {
-      const rows = await this.sheetsService.readRange(this.sheetsService.buildRange(TASK_HISTORY_SHEET, 'A2:D'));
+      const rows = await this.sheetsService.readRange(this.sheetsService.buildRange(TASK_HISTORY_SHEET, 'A2:D1000'));
       return rows.map((row, index) => ({
         id: `history-${index + 2}`,
         taskName: row[0] || '',

@@ -12,7 +12,7 @@ export class LOAService {
 
   async getAllLOARecords(): Promise<LOARecord[]> {
     try {
-      const rows = await this.sheetsService.readRange(this.sheetsService.buildRange(LOA_SHEET, 'A2:E'));
+      const rows = await this.sheetsService.readRange(this.sheetsService.buildRange(LOA_SHEET, 'A2:E1000'));
       
       return rows.map((row, index) => ({
         id: `loa-${index + 2}`,
@@ -86,9 +86,9 @@ export class LOAService {
     const allRows = await this.sheetsService.readRange(this.sheetsService.buildRange(LOA_SHEET, 'A:E'));
     allRows.splice(rowNumber - 1, 1);
     
-    await this.sheetsService.clearRange(this.sheetsService.buildRange(LOA_SHEET, 'A2:E'));
+    await this.sheetsService.clearRange(this.sheetsService.buildRange(LOA_SHEET, 'A2:E1000'));
     if (allRows.length > 1) {
-      await this.sheetsService.writeRange(this.sheetsService.buildRange(LOA_SHEET, 'A2:E'), allRows.slice(1));
+      await this.sheetsService.writeRange(this.sheetsService.buildRange(LOA_SHEET, 'A2:E1000'), allRows.slice(1));
     }
   }
 
