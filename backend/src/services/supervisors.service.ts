@@ -76,7 +76,7 @@ export class SupervisorsService {
 
   private async getLOARecords(): Promise<any[][]> {
     try {
-      return await this.sheetsService.readRange(this.sheetsService.buildRange('LOA Tracking', 'A2:E'));
+      return await this.sheetsService.readRange(this.sheetsService.buildRange('LOA Tracking', 'A2:E1000'));
     } catch (error) {
       // LOA sheet might not exist yet
       return [];
