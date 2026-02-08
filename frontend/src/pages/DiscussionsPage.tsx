@@ -89,7 +89,7 @@ const DiscussionsPage = () => {
           <CardTitle>Discussion Feedback Tracker</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto min-h-[600px]">
+          <div className="overflow-x-auto min-h-[800px]">
             <Table>
               <TableHeader>
                 <TableRow>
