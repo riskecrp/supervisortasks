@@ -18,7 +18,7 @@ export class DiscussionsService {
     }
 
     const headers = rows[0];
-    const supervisors = headers.slice(3); // Supervisors start from column D (index 3)
+    const supervisors = headers.slice(3).map(h => h ? h.toString().trim() : '').filter(Boolean); // Supervisors start from column D (index 3)
 
     // Filter out empty rows (skip header row)
     const dataRows = rows.slice(1).filter(row => {
@@ -125,7 +125,7 @@ export class DiscussionsService {
     if (rows.length === 0) {
       return [];
     }
-    return rows[0].slice(3).filter(Boolean);
+    return rows[0].slice(3).map(h => h ? h.toString().trim() : '').filter(Boolean);
   }
 
   private numberToColumn(num: number): string {

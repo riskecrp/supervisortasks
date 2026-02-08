@@ -34,7 +34,7 @@ export class TasksService {
     return filteredRows.map(({ row, actualRowNumber }) => ({
       id: `task-${actualRowNumber}`,
       taskList: row[0] || '',
-      taskOwner: row[1] || '',
+      taskOwner: row[1] ? row[1].toString().trim() : '',
       status: row[2]?.toString().trim() || 'Assigned',
       claimedDate: row[3] || '',
       dueDate: row[4] || '',
