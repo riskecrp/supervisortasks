@@ -36,6 +36,27 @@ export class SheetsService {
     this.sheets = google.sheets({ version: 'v4', auth });
   }
 
+  /**
+   * Formats a sheet name for use in A1 notation.
+   * Wraps sheet names containing spaces or special characters in single quotes.
+   */
+  private formatSheetName(sheetName: string): string {
+    // If the sheet name contains spaces or special characters, wrap it in single quotes
+    if (sheetName.includes(' ') || sheetName.includes("'") || sheetName.includes('!')) {
+      // Escape any single quotes in the sheet name by doubling them
+      const escapedName = sheetName.replace(/'/g, "''");
+      return `'${escapedName}'`;
+    }
+    return sheetName;
+  }
+
+  /**
+   * Builds a complete range string with proper A1 notation.
+   */
+  buildRange(sheetName: string, cellRange: string): string {
+    return `${this.formatSheetName(sheetName)}!${cellRange}`;
+  }
+
   async readRange(range: string): Promise<any[][]> {
     try {
       const response = await this.sheets.spreadsheets.values.get({

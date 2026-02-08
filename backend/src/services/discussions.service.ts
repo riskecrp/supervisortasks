@@ -1,7 +1,7 @@
 import { SheetsService } from './sheets.service';
 import { Discussion } from '../types';
 
-const DISCUSSIONS_SHEET = "'Discussions Pending Feedback'";
+const DISCUSSIONS_SHEET = 'Discussions Pending Feedback';
 
 export class DiscussionsService {
   private sheetsService: SheetsService;
@@ -11,7 +11,7 @@ export class DiscussionsService {
   }
 
   async getAllDiscussions(): Promise<Discussion[]> {
-    const rows = await this.sheetsService.readRange(`${DISCUSSIONS_SHEET}!A:Z`);
+    const rows = await this.sheetsService.readRange(this.sheetsService.buildRange(DISCUSSIONS_SHEET, 'A:Z'));
     
     if (rows.length === 0) {
       return [];
@@ -57,7 +57,7 @@ export class DiscussionsService {
   }
 
   async createDiscussion(discussion: Omit<Discussion, 'id'>): Promise<Discussion> {
-    const rows = await this.sheetsService.readRange(`${DISCUSSIONS_SHEET}!A:Z`);
+    const rows = await this.sheetsService.readRange(this.sheetsService.buildRange(DISCUSSIONS_SHEET, 'A:Z'));
     const headers = rows.length > 0 ? rows[0] : [];
     const supervisors = headers.slice(3);
 
@@ -72,7 +72,7 @@ export class DiscussionsService {
       newRow.push('');
     });
 
-    await this.sheetsService.appendRange(`${DISCUSSIONS_SHEET}!A:Z`, [newRow]);
+    await this.sheetsService.appendRange(this.sheetsService.buildRange(DISCUSSIONS_SHEET, 'A:Z'), [newRow]);
     
     const discussions = await this.getAllDiscussions();
     return discussions[discussions.length - 1];
@@ -80,7 +80,7 @@ export class DiscussionsService {
 
   async updateDiscussionFeedback(id: string, supervisorName: string, completed: boolean): Promise<Discussion> {
     const rowNumber = parseInt(id.split('-')[1]);
-    const rows = await this.sheetsService.readRange(`${DISCUSSIONS_SHEET}!A:Z`);
+    const rows = await this.sheetsService.readRange(this.sheetsService.buildRange(DISCUSSIONS_SHEET, 'A:Z'));
     
     if (rows.length === 0) {
       throw new Error('No discussions found');
@@ -97,7 +97,7 @@ export class DiscussionsService {
     const value = completed ? 'TRUE' : '';
     
     await this.sheetsService.writeRange(
-      `${DISCUSSIONS_SHEET}!${columnLetter}${rowNumber}`,
+      this.sheetsService.buildRange(DISCUSSIONS_SHEET, `${columnLetter}${rowNumber}`),
       [[value]]
     );
 
@@ -112,17 +112,17 @@ export class DiscussionsService {
   async deleteDiscussion(id: string): Promise<void> {
     const rowNumber = parseInt(id.split('-')[1]);
     
-    const allRows = await this.sheetsService.readRange(`${DISCUSSIONS_SHEET}!A:Z`);
+    const allRows = await this.sheetsService.readRange(this.sheetsService.buildRange(DISCUSSIONS_SHEET, 'A:Z'));
     allRows.splice(rowNumber - 1, 1);
     
-    await this.sheetsService.clearRange(`${DISCUSSIONS_SHEET}!A2:Z`);
+    await this.sheetsService.clearRange(this.sheetsService.buildRange(DISCUSSIONS_SHEET, 'A2:Z'));
     if (allRows.length > 1) {
-      await this.sheetsService.writeRange(`${DISCUSSIONS_SHEET}!A2:Z`, allRows.slice(1));
+      await this.sheetsService.writeRange(this.sheetsService.buildRange(DISCUSSIONS_SHEET, 'A2:Z'), allRows.slice(1));
     }
   }
 
   async getSupervisorsFromDiscussions(): Promise<string[]> {
-    const rows = await this.sheetsService.readRange(`${DISCUSSIONS_SHEET}!A1:Z1`);
+    const rows = await this.sheetsService.readRange(this.sheetsService.buildRange(DISCUSSIONS_SHEET, 'A1:Z1'));
     if (rows.length === 0) {
       return [];
     }
