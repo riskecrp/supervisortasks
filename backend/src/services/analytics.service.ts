@@ -113,7 +113,8 @@ export class AnalyticsService {
         const completedDate = new Date(task.completedDate);
         const createdDate = new Date(task.createdDate);
         const durationDays = Math.floor((completedDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
-        return sum + durationDays;
+        // Only count if duration is non-negative (completedDate >= createdDate)
+        return durationDays >= 0 ? sum + durationDays : sum;
       }, 0);
       const averageCompletionDays = totalCompleted > 0 ? totalDays / totalCompleted : 0;
 
