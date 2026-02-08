@@ -222,7 +222,7 @@ export class LOAService {
       console.log(`Mapped ${loaMap.size} supervisors with active LOA`);
       
       // Update Task Rotation rows
-      let loaTrueCount = 0;
+      let activeLOACount = 0;
       const updatedRows = taskRotationRows.map(row => {
         const supervisorName = row[0] || '';
         const rank = row[1] || '';
@@ -231,7 +231,7 @@ export class LOAService {
         
         if (loaRecord) {
           // Supervisor has active LOA
-          loaTrueCount++;
+          activeLOACount++;
           return [
             supervisorName,
             rank,
@@ -250,7 +250,7 @@ export class LOAService {
           ];
         }
       });
-      console.log(`Updated ${loaTrueCount} supervisors to LOA=TRUE`);
+      console.log(`Updated ${activeLOACount} supervisors to LOA=TRUE`);
       
       // Write back to Task Rotation sheet
       if (updatedRows.length > 0) {
