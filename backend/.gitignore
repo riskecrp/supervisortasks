@@ -1,0 +1,12 @@
+# Backend specific ignores
+node_modules/
+dist/
+*.log
+
+# Environment variables
+.env
+.env.local
+
+# Google credentials
+*credentials*.json
+service-account*.json
