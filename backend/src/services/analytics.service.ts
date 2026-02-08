@@ -41,7 +41,7 @@ export class AnalyticsService {
 
     const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
-    const supervisorMetrics = await this.calculateSupervisorMetrics(supervisors, taskHistory);
+    const supervisorMetrics = await this.calculateSupervisorMetrics(supervisors, tasks, taskHistory);
     
     // Calculate workload distribution
     const workloadDistribution = this.calculateWorkloadDistribution(supervisorMetrics);
@@ -68,14 +68,18 @@ export class AnalyticsService {
       return null;
     }
 
-    const taskHistory = await this.tasksService.getTaskHistory();
-    const metrics = await this.calculateSupervisorMetrics([supervisor], taskHistory);
+    const [tasks, taskHistory] = await Promise.all([
+      this.tasksService.getAllTasks(),
+      this.tasksService.getTaskHistory(),
+    ]);
+    const metrics = await this.calculateSupervisorMetrics([supervisor], tasks, taskHistory);
     
     return metrics[0] || null;
   }
 
   private async calculateSupervisorMetrics(
     supervisors: any[],
+    tasks: any[],
     taskHistory: any[]
   ): Promise<SupervisorMetrics[]> {
     const now = new Date();
@@ -84,23 +88,29 @@ export class AnalyticsService {
     startOfWeek.setDate(now.getDate() - now.getDay());
 
     return supervisors.map(supervisor => {
-      const supervisorTasks = taskHistory.filter(
+      // Count all tasks claimed by this supervisor from the Tasks sheet
+      const supervisorTasksClaimed = tasks.filter(
+        t => t.claimedBy === supervisor.name
+      );
+
+      // Get completed tasks from task history for time-based metrics
+      const supervisorHistoryTasks = taskHistory.filter(
         t => t.supervisor === supervisor.name
       );
 
-      const totalCompleted = supervisorTasks.length;
+      const totalCompleted = supervisorHistoryTasks.length;
       
-      const thisMonth = supervisorTasks.filter(t => {
+      const thisMonth = supervisorHistoryTasks.filter(t => {
         const completedDate = new Date(t.completedDate);
         return completedDate >= startOfMonth;
       }).length;
 
-      const thisWeek = supervisorTasks.filter(t => {
+      const thisWeek = supervisorHistoryTasks.filter(t => {
         const completedDate = new Date(t.completedDate);
         return completedDate >= startOfWeek;
       }).length;
 
-      const totalDays = supervisorTasks.reduce((sum, t) => sum + (t.durationDays || 0), 0);
+      const totalDays = supervisorHistoryTasks.reduce((sum, t) => sum + (t.durationDays || 0), 0);
       const averageCompletionDays = totalCompleted > 0 ? totalDays / totalCompleted : 0;
 
       return {
