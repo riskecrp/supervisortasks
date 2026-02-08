@@ -90,7 +90,7 @@ const TasksPage = () => {
       ...formData,
       completedDate: formData.status === 'Completed' 
         ? (editingTask?.completedDate || new Date().toISOString()) 
-        : editingTask?.completedDate,
+        : undefined,
       createdDate: editingTask?.createdDate || new Date().toISOString(),
     };
 
@@ -118,7 +118,7 @@ const TasksPage = () => {
         updates: {
           ...task,
           status: newStatus,
-          completedDate: newStatus === 'Completed' ? new Date().toISOString() : task.completedDate,
+          completedDate: newStatus === 'Completed' ? (task.completedDate || new Date().toISOString()) : undefined,
         },
       });
       toast.success('Task status updated successfully');
