@@ -30,19 +30,24 @@ export class AnalyticsService {
     ]);
 
     const totalTasks = tasks.length;
-    const completedTasks = tasks.filter(t => 
-      t.status && t.status.toString().trim().toLowerCase() === 'completed'
+    
+    // Pre-process status values once
+    const tasksWithNormalizedStatus = tasks.map(t => ({
+      ...t,
+      normalizedStatus: t.status ? t.status.toString().trim().toLowerCase() : ''
+    }));
+    
+    const completedTasks = tasksWithNormalizedStatus.filter(t => 
+      t.normalizedStatus === 'completed'
     ).length;
     
     // Count other statuses dynamically
-    const inProgressTasks = tasks.filter(t => 
-      t.status && 
-      t.status.toString().trim().toLowerCase() !== 'completed' &&
-      t.status.toString().trim() !== ''
+    const inProgressTasks = tasksWithNormalizedStatus.filter(t => 
+      t.normalizedStatus !== 'completed' && t.normalizedStatus !== ''
     ).length;
     
-    const notStartedTasks = tasks.filter(t => 
-      !t.status || t.status.toString().trim() === ''
+    const notStartedTasks = tasksWithNormalizedStatus.filter(t => 
+      t.normalizedStatus === ''
     ).length;
 
     const totalSupervisors = supervisors.length;
@@ -51,7 +56,7 @@ export class AnalyticsService {
 
     const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
-    const supervisorMetrics = await this.calculateSupervisorMetrics(supervisors, tasks);
+    const supervisorMetrics = await this.calculateSupervisorMetrics(supervisors, tasksWithNormalizedStatus);
     
     // Calculate workload distribution
     const workloadDistribution = this.calculateWorkloadDistribution(supervisorMetrics);
@@ -95,15 +100,36 @@ export class AnalyticsService {
 
     // Get task history for completion metrics (as fallback)
     const taskHistory = await this.tasksService.getTaskHistory();
+    
+    // Group tasks by supervisor once to avoid repeated filtering
+    const tasksBySupervisor = new Map<string, any[]>();
+    tasks.forEach(task => {
+      if (task.taskOwner && task.taskOwner.trim()) {
+        const owner = task.taskOwner.trim();
+        if (!tasksBySupervisor.has(owner)) {
+          tasksBySupervisor.set(owner, []);
+        }
+        tasksBySupervisor.get(owner)!.push(task);
+      }
+    });
+    
+    // Group task history by supervisor once
+    const historyBySupervisor = new Map<string, any[]>();
+    taskHistory.forEach(h => {
+      if (h.supervisor) {
+        if (!historyBySupervisor.has(h.supervisor)) {
+          historyBySupervisor.set(h.supervisor, []);
+        }
+        historyBySupervisor.get(h.supervisor)!.push(h);
+      }
+    });
 
     return supervisors.map(supervisor => {
       // Count completed tasks directly from Tasks sheet where status = "Completed" and taskOwner exists
       // This gives the most accurate current count of all completed tasks
-      const completedTasksFromSheet = tasks.filter(
-        t => t.taskOwner && 
-             t.taskOwner.trim() === supervisor.name && 
-             t.status && 
-             t.status.toString().trim().toLowerCase() === 'completed'
+      const supervisorTasks = tasksBySupervisor.get(supervisor.name) || [];
+      const completedTasksFromSheet = supervisorTasks.filter(
+        t => t.normalizedStatus === 'completed'
       );
       
       const totalCompleted = completedTasksFromSheet.length;
@@ -112,9 +138,7 @@ export class AnalyticsService {
       // we use Task History which is populated when a task's status changes to "Completed"
       // Note: There may be a brief delay between marking completed and history entry creation
       // This means totalCompleted (from Tasks sheet) may be slightly higher than history counts
-      const completedTasksFromHistory = taskHistory.filter(
-        h => h.supervisor === supervisor.name
-      );
+      const completedTasksFromHistory = historyBySupervisor.get(supervisor.name) || [];
       
       const thisMonth = completedTasksFromHistory.filter(h => {
         if (!h.completedDate) return false;
