@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Plus, Trash2, ExternalLink } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/Table';
@@ -84,11 +83,11 @@ const DiscussionsPage = () => {
         </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Discussion Feedback Tracker</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900">Discussion Feedback Tracker</h3>
+        </div>
+        <div>
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
@@ -176,8 +175,8 @@ const DiscussionsPage = () => {
               </TableBody>
             </Table>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <Modal
         isOpen={isModalOpen}
