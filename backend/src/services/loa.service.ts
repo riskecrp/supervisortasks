@@ -1,7 +1,7 @@
 import { SheetsService } from './sheets.service';
 import { LOARecord } from '../types';
 
-const LOA_SHEET = 'LOA Tracking';
+const LOA_SHEET = "'LOA Tracking'";
 
 export class LOAService {
   private sheetsService: SheetsService;
@@ -12,8 +12,7 @@ export class LOAService {
 
   async getAllLOARecords(): Promise<LOARecord[]> {
     try {
-      const allRows = await this.sheetsService.readRange(`${LOA_SHEET}!A:E`);
-      const rows = allRows.slice(1); // Skip header row
+      const rows = await this.sheetsService.readRange(`${LOA_SHEET}!A2:E`);
       
       return rows.map((row, index) => ({
         id: `loa-${index + 2}`,

@@ -2,7 +2,7 @@ import { SheetsService } from './sheets.service';
 import { Task } from '../types';
 
 const TASKS_SHEET = 'Tasks';
-const TASK_HISTORY_SHEET = 'Task History';
+const TASK_HISTORY_SHEET = "'Task History'";
 
 export class TasksService {
   private sheetsService: SheetsService;
@@ -12,8 +12,7 @@ export class TasksService {
   }
 
   async getAllTasks(): Promise<Task[]> {
-    const allRows = await this.sheetsService.readRange(`${TASKS_SHEET}!A:E`);
-    const rows = allRows.slice(1); // Skip header row
+    const rows = await this.sheetsService.readRange(`${TASKS_SHEET}!A2:E`);
     
     // Filter out empty rows while tracking original row numbers
     const tasks: Task[] = [];
@@ -133,8 +132,7 @@ export class TasksService {
 
   async getTaskHistory(): Promise<any[]> {
     try {
-      const allRows = await this.sheetsService.readRange(`${TASK_HISTORY_SHEET}!A:D`);
-      const rows = allRows.slice(1); // Skip header row
+      const rows = await this.sheetsService.readRange(`${TASK_HISTORY_SHEET}!A2:D`);
       return rows.map((row, index) => ({
         id: `history-${index + 2}`,
         taskName: row[0] || '',

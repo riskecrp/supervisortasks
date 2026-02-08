@@ -1,7 +1,7 @@
 import { SheetsService } from './sheets.service';
 import { Discussion } from '../types';
 
-const DISCUSSIONS_SHEET = 'Discussions Pending Feedback';
+const DISCUSSIONS_SHEET = "'Discussions Pending Feedback'";
 
 export class DiscussionsService {
   private sheetsService: SheetsService;
