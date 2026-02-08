@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Plus, Pencil, Trash2, Filter } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -25,7 +25,6 @@ const TasksPage = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [supervisorFilter, setSupervisorFilter] = useState<string>('all');
   const [showCompleted, setShowCompleted] = useState(false);
-  const [previousStatus, setPreviousStatus] = useState<string>('');
   
   const [formData, setFormData] = useState({
     task: '',
@@ -46,7 +45,6 @@ const TasksPage = () => {
   const handleOpenModal = (task?: Task) => {
     if (task) {
       setEditingTask(task);
-      setPreviousStatus(task.status);
       setFormData({
         task: task.task,
         claimedBy: task.claimedBy,
@@ -54,7 +52,6 @@ const TasksPage = () => {
       });
     } else {
       setEditingTask(null);
-      setPreviousStatus('');
       setFormData({
         task: '',
         claimedBy: activeSupervisors[0]?.name || '',
@@ -67,7 +64,6 @@ const TasksPage = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingTask(null);
-    setPreviousStatus('');
     setFormData({ task: '', claimedBy: '', status: statuses[0] || 'Not Started' });
   };
 
