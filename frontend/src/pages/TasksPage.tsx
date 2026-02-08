@@ -1,12 +1,10 @@
 import { useState } from 'react';
 import { Plus, Pencil, Trash2, Filter, AlertTriangle } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/Table';
 import { Modal } from '../components/ui/Modal';
-import { Badge } from '../components/ui/Badge';
 import { Loading } from '../components/ui/Loading';
 import { useTasks, useCreateTask, useUpdateTask, useDeleteTask, useAvailableStatuses } from '../hooks/useTasks';
 import { useSupervisors } from '../hooks/useSupervisors';
@@ -107,6 +105,13 @@ const TasksPage = () => {
     }
   };
 
+  const handleStatusChange = (taskId: string, newStatus: string) => {
+    updateTask.mutate({ 
+      id: taskId, 
+      updates: { status: newStatus } 
+    });
+  };
+
   const isTaskOverdue = (task: Task): boolean => {
     // Task is overdue if: not completed AND has been open for more than 5 days
     if (task.status === 'Completed') {
@@ -127,15 +132,6 @@ const TasksPage = () => {
     const claimedDate = new Date(task.claimedDate);
     const currentDate = new Date();
     return Math.floor((currentDate.getTime() - claimedDate.getTime()) / (1000 * 60 * 60 * 24));
-  };
-
-  const getStatusBadge = (status: string) => {
-    const variants: Record<string, 'default' | 'warning' | 'success'> = {
-      'Not Started': 'default',
-      'In Progress': 'warning',
-      'Completed': 'success',
-    };
-    return <Badge variant={variants[status] || 'default'}>{status}</Badge>;
   };
 
   if (isLoading) {
@@ -168,10 +164,10 @@ const TasksPage = () => {
         </label>
       </div>
 
-      <Card>
-        <CardHeader>
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
-            <CardTitle>Task List</CardTitle>
+            <h3 className="text-lg font-semibold text-gray-900">Task List</h3>
             <div className="flex items-center gap-3">
               <Filter className="w-4 h-4 text-gray-500" />
               <Select
@@ -194,8 +190,8 @@ const TasksPage = () => {
               />
             </div>
           </div>
-        </CardHeader>
-        <CardContent className="p-0">
+        </div>
+        <div>
           <Table>
             <TableHeader>
               <TableRow>
@@ -234,7 +230,14 @@ const TasksPage = () => {
                         </div>
                       </TableCell>
                       <TableCell>{task.taskOwner}</TableCell>
-                      <TableCell>{getStatusBadge(task.status)}</TableCell>
+                      <TableCell>
+                        <Select
+                          value={task.status}
+                          onChange={(e) => handleStatusChange(task.id, e.target.value)}
+                          options={statuses.map(s => ({ value: s, label: s }))}
+                          className="min-w-[200px]"
+                        />
+                      </TableCell>
                       <TableCell>
                         {task.claimedDate
                           ? new Date(task.claimedDate).toLocaleDateString()
@@ -281,8 +284,8 @@ const TasksPage = () => {
               )}
             </TableBody>
           </Table>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <Modal
         isOpen={isModalOpen}
