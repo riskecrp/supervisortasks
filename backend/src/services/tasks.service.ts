@@ -33,10 +33,10 @@ export class TasksService {
     
     return filteredRows.map(({ row, actualRowNumber }) => ({
       id: `task-${actualRowNumber}`,
-      taskList: row[0] || '',
-      taskOwner: row[1] || '',
+      taskList: row[0]?.toString().trim() || '',
+      taskOwner: row[1]?.toString().trim() || '',
       status: row[2]?.toString().trim() || 'Assigned',
-      claimedDate: row[3] || '',
+      claimedDate: row[3]?.toString().trim() || '',
       dueDate: row[4] || '',
       notes: row[5] || '',
     }));
