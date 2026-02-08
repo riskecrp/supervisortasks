@@ -15,21 +15,24 @@ const SupervisorsPage = () => {
   const removeSupervisor = useRemoveSupervisor();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [supervisorName, setSupervisorName] = useState('');
+  const [formData, setFormData] = useState({
+    name: '',
+    rank: '',
+  });
 
   const handleOpenModal = () => {
-    setSupervisorName('');
+    setFormData({ name: '', rank: '' });
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setSupervisorName('');
+    setFormData({ name: '', rank: '' });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await addSupervisor.mutateAsync(supervisorName.trim());
+    await addSupervisor.mutateAsync({ name: formData.name.trim(), rank: formData.rank.trim() });
     handleCloseModal();
   };
 
@@ -101,6 +104,7 @@ const SupervisorsPage = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
+                <TableHead>Rank</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -108,7 +112,7 @@ const SupervisorsPage = () => {
             <TableBody>
               {activeSupervisors.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center text-gray-500 py-8">
+                  <TableCell colSpan={4} className="text-center text-gray-500 py-8">
                     No active supervisors
                   </TableCell>
                 </TableRow>
@@ -116,6 +120,7 @@ const SupervisorsPage = () => {
                 activeSupervisors.map((supervisor) => (
                   <TableRow key={supervisor.name}>
                     <TableCell className="font-medium">{supervisor.name}</TableCell>
+                    <TableCell>{supervisor.rank || '-'}</TableCell>
                     <TableCell>
                       {supervisor.onLOA ? (
                         <Badge variant="warning">On Leave</Badge>
@@ -178,10 +183,16 @@ const SupervisorsPage = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
             label="Supervisor Name"
-            value={supervisorName}
-            onChange={(e) => setSupervisorName(e.target.value)}
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             placeholder="Enter full name"
             required
+          />
+          <Input
+            label="Rank (Optional)"
+            value={formData.rank}
+            onChange={(e) => setFormData({ ...formData, rank: e.target.value })}
+            placeholder="e.g., Supervisor, Manager, etc."
           />
           <div className="flex justify-end gap-3 mt-6">
             <Button type="button" variant="secondary" onClick={handleCloseModal}>

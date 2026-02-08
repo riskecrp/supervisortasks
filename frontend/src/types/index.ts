@@ -18,6 +18,7 @@ export interface Discussion {
 
 export interface Supervisor {
   name: string;
+  rank?: string;
   active: boolean;
   onLOA: boolean;
 }

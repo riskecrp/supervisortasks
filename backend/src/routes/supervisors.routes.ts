@@ -18,13 +18,13 @@ export function createSupervisorsRouter(supervisorsService: SupervisorsService):
   // Add supervisor
   router.post('/', async (req: Request, res: Response) => {
     try {
-      const { name } = req.body;
+      const { name, rank } = req.body;
       
       if (!name) {
         return res.status(400).json({ error: 'Supervisor name is required' });
       }
 
-      const newSupervisor = await supervisorsService.addSupervisor(name);
+      const newSupervisor = await supervisorsService.addSupervisor(name, rank);
       res.status(201).json(newSupervisor);
     } catch (error: any) {
       console.error('Error adding supervisor:', error);

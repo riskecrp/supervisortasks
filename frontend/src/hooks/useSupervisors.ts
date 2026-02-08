@@ -16,7 +16,7 @@ export const useAddSupervisor = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (name: string) => supervisorsAPI.add(name),
+    mutationFn: (data: { name: string; rank?: string }) => supervisorsAPI.add(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['supervisors'] });
       queryClient.invalidateQueries({ queryKey: ['analytics'] });
