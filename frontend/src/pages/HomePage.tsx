@@ -102,11 +102,11 @@ const HomePage = () => {
               </div>
               <div className="grid grid-cols-3 gap-4 mt-6">
                 <div>
-                  <Badge variant="default">Not Started</Badge>
+                  <Badge variant="default">Pending</Badge>
                   <p className="text-2xl font-bold mt-2 text-gray-100">{analytics?.notStartedTasks || 0}</p>
                 </div>
                 <div>
-                  <Badge variant="warning">In Progress</Badge>
+                  <Badge variant="warning">Active</Badge>
                   <p className="text-2xl font-bold mt-2 text-gray-100">{analytics?.inProgressTasks || 0}</p>
                 </div>
                 <div>
