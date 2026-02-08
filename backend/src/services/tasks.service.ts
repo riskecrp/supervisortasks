@@ -104,6 +104,11 @@ export class TasksService {
 
   private async addToHistory(task: Task): Promise<void> {
     if (!task.taskOwner || !task.claimedDate) {
+      console.warn('Skipping task history: Missing required fields', {
+        taskList: task.taskList,
+        hasOwner: !!task.taskOwner,
+        hasClaimedDate: !!task.claimedDate,
+      });
       return;
     }
 

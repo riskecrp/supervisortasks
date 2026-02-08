@@ -3,6 +3,8 @@ import { Supervisor } from '../types';
 import { DiscussionsService } from './discussions.service';
 
 const DISCUSSIONS_SHEET = 'Discussions Pending Feedback';
+const TASK_ROTATION_SHEET = 'Task Rotation';
+const TASK_ROTATION_HEADERS = ['Employee Name', 'Rank', 'LOA?', 'LOA Start Date', 'LOA End Date'];
 
 export class SupervisorsService {
   private sheetsService: SheetsService;
@@ -20,7 +22,6 @@ export class SupervisorsService {
     await this.ensureTaskRotationSync(supervisorNames);
     
     // Get LOA status and rank for each supervisor from Task Rotation
-    const TASK_ROTATION_SHEET = 'Task Rotation';
     let taskRotationData: any[][] = [];
     try {
       taskRotationData = await this.sheetsService.readRange(`${TASK_ROTATION_SHEET}!A:E`);
@@ -52,8 +53,6 @@ export class SupervisorsService {
 
   private async ensureTaskRotationSync(supervisorNames: string[]): Promise<void> {
     try {
-      const TASK_ROTATION_SHEET = 'Task Rotation';
-      
       // Read existing Task Rotation data
       let existingRows: any[][] = [];
       try {
@@ -65,10 +64,8 @@ export class SupervisorsService {
 
       // If no rows exist, create header
       if (existingRows.length === 0) {
-        await this.sheetsService.writeRange(`${TASK_ROTATION_SHEET}!A1:E1`, [
-          ['Employee Name', 'Rank', 'LOA?', 'LOA Start Date', 'LOA End Date']
-        ]);
-        existingRows = [['Employee Name', 'Rank', 'LOA?', 'LOA Start Date', 'LOA End Date']];
+        await this.sheetsService.writeRange(`${TASK_ROTATION_SHEET}!A1:E1`, [TASK_ROTATION_HEADERS]);
+        existingRows = [TASK_ROTATION_HEADERS];
       }
 
       // Get list of supervisors already in Task Rotation
@@ -115,8 +112,6 @@ export class SupervisorsService {
 
   private async addSupervisorToTaskRotation(name: string, rank: string = ''): Promise<void> {
     try {
-      const TASK_ROTATION_SHEET = 'Task Rotation';
-      
       // Check if Task Rotation sheet exists and has data
       let existingRows: any[][] = [];
       try {
@@ -128,10 +123,8 @@ export class SupervisorsService {
 
       // If no rows exist, create header
       if (existingRows.length === 0) {
-        await this.sheetsService.writeRange(`${TASK_ROTATION_SHEET}!A1:E1`, [
-          ['Employee Name', 'Rank', 'LOA?', 'LOA Start Date', 'LOA End Date']
-        ]);
-        existingRows = [['Employee Name', 'Rank', 'LOA?', 'LOA Start Date', 'LOA End Date']];
+        await this.sheetsService.writeRange(`${TASK_ROTATION_SHEET}!A1:E1`, [TASK_ROTATION_HEADERS]);
+        existingRows = [TASK_ROTATION_HEADERS];
       }
 
       // Check if supervisor already exists in Task Rotation
@@ -179,8 +172,6 @@ export class SupervisorsService {
 
   private async removeSupervisorFromTaskRotation(name: string): Promise<void> {
     try {
-      const TASK_ROTATION_SHEET = 'Task Rotation';
-      
       const allRows = await this.sheetsService.readRange(`${TASK_ROTATION_SHEET}!A:E`);
       
       if (allRows.length <= 1) {
