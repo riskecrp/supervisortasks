@@ -33,7 +33,9 @@ const TasksPage = () => {
   });
 
   const activeSupervisors = supervisors?.filter(s => s.active) || [];
-  const statuses = availableStatuses || ['Not Started', 'In Progress', 'Completed'];
+  const statuses = (availableStatuses && availableStatuses.length > 0) 
+    ? availableStatuses 
+    : ['Not Started', 'In Progress', 'Completed'];
 
   const filteredTasks = tasks?.filter(task => {
     const matchesStatus = statusFilter === 'all' || task.status === statusFilter;

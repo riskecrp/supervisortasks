@@ -23,11 +23,10 @@ export class AnalyticsService {
   }
 
   async getAnalytics(): Promise<Analytics> {
-    const [tasks, supervisors, loaRecords, taskHistory] = await Promise.all([
+    const [tasks, supervisors, loaRecords] = await Promise.all([
       this.tasksService.getAllTasks(),
       this.supervisorsService.getAllSupervisors(),
       this.loaService.getAllLOARecords(),
-      this.tasksService.getTaskHistory(),
     ]);
 
     const totalTasks = tasks.length;
@@ -41,7 +40,7 @@ export class AnalyticsService {
 
     const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
-    const supervisorMetrics = await this.calculateSupervisorMetrics(supervisors, taskHistory);
+    const supervisorMetrics = await this.calculateSupervisorMetrics(supervisors, tasks);
     
     // Calculate workload distribution
     const workloadDistribution = this.calculateWorkloadDistribution(supervisorMetrics);
@@ -68,15 +67,15 @@ export class AnalyticsService {
       return null;
     }
 
-    const taskHistory = await this.tasksService.getTaskHistory();
-    const metrics = await this.calculateSupervisorMetrics([supervisor], taskHistory);
+    const tasks = await this.tasksService.getAllTasks();
+    const metrics = await this.calculateSupervisorMetrics([supervisor], tasks);
     
     return metrics[0] || null;
   }
 
   private async calculateSupervisorMetrics(
     supervisors: any[],
-    taskHistory: any[]
+    tasks: any[]
   ): Promise<SupervisorMetrics[]> {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -84,23 +83,39 @@ export class AnalyticsService {
     startOfWeek.setDate(now.getDate() - now.getDay());
 
     return supervisors.map(supervisor => {
-      const supervisorTasks = taskHistory.filter(
-        t => t.supervisor === supervisor.name
+      // Count all tasks currently claimed by this supervisor from the Tasks sheet
+      const supervisorTasks = tasks.filter(
+        t => t.claimedBy === supervisor.name
       );
 
-      const totalCompleted = supervisorTasks.length;
+      // Count completed tasks - by number of times name appears with status = Completed
+      const completedTasks = supervisorTasks.filter(t => t.status === 'Completed');
+      const totalCompleted = completedTasks.length;
       
-      const thisMonth = supervisorTasks.filter(t => {
+      // Count tasks completed this month
+      const thisMonth = completedTasks.filter(t => {
+        if (!t.completedDate) return false;
         const completedDate = new Date(t.completedDate);
         return completedDate >= startOfMonth;
       }).length;
 
-      const thisWeek = supervisorTasks.filter(t => {
+      // Count tasks completed this week
+      const thisWeek = completedTasks.filter(t => {
+        if (!t.completedDate) return false;
         const completedDate = new Date(t.completedDate);
         return completedDate >= startOfWeek;
       }).length;
 
-      const totalDays = supervisorTasks.reduce((sum, t) => sum + (t.durationDays || 0), 0);
+      // Calculate average completion days from Tasks sheet
+      // Duration = completedDate - createdDate for each completed task
+      const totalDays = completedTasks.reduce((sum, task) => {
+        if (!task.completedDate || !task.createdDate) return sum;
+        const completedDate = new Date(task.completedDate);
+        const createdDate = new Date(task.createdDate);
+        const durationDays = Math.floor((completedDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
+        // Only count if duration is non-negative (completedDate >= createdDate)
+        return durationDays >= 0 ? sum + durationDays : sum;
+      }, 0);
       const averageCompletionDays = totalCompleted > 0 ? totalDays / totalCompleted : 0;
 
       return {

@@ -107,7 +107,12 @@ export class LOAService {
     console.log('Fetching updated LOA records...');
     const records = await this.getAllLOARecords();
     const newRecord = records[records.length - 1];
-    console.log('LOA record created successfully with ID:', newRecord?.id);
+    
+    if (!newRecord) {
+      throw new Error('Failed to create LOA record: Record not found after creation');
+    }
+    
+    console.log('LOA record created successfully with ID:', newRecord.id);
     return newRecord;
   }
 
