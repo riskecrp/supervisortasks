@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Plus, UserX } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/Table';
@@ -63,43 +62,37 @@ const SupervisorsPage = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-sm font-medium text-gray-600">Total Supervisors</p>
-              <p className="text-4xl font-bold text-gray-900 mt-2">
-                {supervisors?.length || 0}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-sm font-medium text-gray-600">Active</p>
-              <p className="text-4xl font-bold text-green-600 mt-2">
-                {activeSupervisors.length}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-sm font-medium text-gray-600">On Leave</p>
-              <p className="text-4xl font-bold text-orange-600 mt-2">
-                {activeSupervisors.filter(s => s.onLOA).length}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="text-center">
+            <p className="text-sm font-medium text-gray-600">Total Supervisors</p>
+            <p className="text-4xl font-bold text-gray-900 mt-2">
+              {supervisors?.length || 0}
+            </p>
+          </div>
+        </div>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="text-center">
+            <p className="text-sm font-medium text-gray-600">Active</p>
+            <p className="text-4xl font-bold text-green-600 mt-2">
+              {activeSupervisors.length}
+            </p>
+          </div>
+        </div>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="text-center">
+            <p className="text-sm font-medium text-gray-600">On Leave</p>
+            <p className="text-4xl font-bold text-orange-600 mt-2">
+              {activeSupervisors.filter(s => s.onLOA).length}
+            </p>
+          </div>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Active Supervisors</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900">Active Supervisors</h3>
+        </div>
+        <div>
           <Table>
             <TableHeader>
               <TableRow>
@@ -142,15 +135,15 @@ const SupervisorsPage = () => {
               )}
             </TableBody>
           </Table>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {inactiveSupervisors.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Inactive Supervisors</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">Inactive Supervisors</h3>
+          </div>
+          <div>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -171,8 +164,8 @@ const SupervisorsPage = () => {
                 ))}
               </TableBody>
             </Table>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       <Modal
