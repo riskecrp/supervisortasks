@@ -126,7 +126,7 @@ export class AnalyticsService {
         if (!task.claimedDate) return false;
         try {
           const claimedDate = new Date(task.claimedDate);
-          return claimedDate >= startOfMonth && claimedDate <= now;
+          return claimedDate >= startOfMonth;
         } catch {
           return false;
         }
@@ -137,7 +137,7 @@ export class AnalyticsService {
         if (!task.claimedDate) return false;
         try {
           const claimedDate = new Date(task.claimedDate);
-          return claimedDate >= startOfWeek && claimedDate <= now;
+          return claimedDate >= startOfWeek;
         } catch {
           return false;
         }
