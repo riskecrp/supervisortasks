@@ -89,5 +89,16 @@ export function createTasksRouter(tasksService: TasksService): Router {
     }
   });
 
+  // Get available statuses
+  router.get('/statuses/available', async (req: Request, res: Response) => {
+    try {
+      const statuses = await tasksService.getAvailableStatuses();
+      res.json(statuses);
+    } catch (error: any) {
+      console.error('Error getting available statuses:', error);
+      res.status(500).json({ error: error.message || 'Failed to fetch available statuses' });
+    }
+  });
+
   return router;
 }

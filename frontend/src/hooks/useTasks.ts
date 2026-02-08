@@ -23,6 +23,17 @@ export const useTaskHistory = () => {
   });
 };
 
+export const useAvailableStatuses = () => {
+  return useQuery({
+    queryKey: ['tasks', 'statuses'],
+    queryFn: async () => {
+      const response = await tasksAPI.getAvailableStatuses();
+      return response.data;
+    },
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+};
+
 export const useCreateTask = () => {
   const queryClient = useQueryClient();
 

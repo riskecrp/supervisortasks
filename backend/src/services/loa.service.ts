@@ -2,6 +2,7 @@ import { SheetsService } from './sheets.service';
 import { LOARecord } from '../types';
 
 const LOA_SHEET = 'LOA Tracking';
+const TASK_ROTATION_SHEET = 'Task Rotation';
 
 export class LOAService {
   private sheetsService: SheetsService;
@@ -53,6 +54,9 @@ export class LOAService {
       await this.sheetsService.appendRange(`${LOA_SHEET}!A:E`, [newRow]);
     }
     
+    // Sync to Task Rotation tab
+    await this.syncToTaskRotation();
+    
     const records = await this.getAllLOARecords();
     return records[records.length - 1];
   }
@@ -77,6 +81,9 @@ export class LOAService {
 
     await this.sheetsService.writeRange(`${LOA_SHEET}!A${rowNumber}:E${rowNumber}`, [updatedRow]);
     
+    // Sync to Task Rotation tab
+    await this.syncToTaskRotation();
+    
     return updatedRecord;
   }
 
@@ -90,10 +97,67 @@ export class LOAService {
     if (allRows.length > 1) {
       await this.sheetsService.writeRange(`${LOA_SHEET}!A2:E`, allRows.slice(1));
     }
+    
+    // Sync to Task Rotation tab
+    await this.syncToTaskRotation();
   }
 
   async getActiveLOA(): Promise<LOARecord[]> {
     const allRecords = await this.getAllLOARecords();
     return allRecords.filter(record => record.status === 'Active');
+  }
+
+  async syncToTaskRotation(): Promise<void> {
+    try {
+      // Read all supervisors from Task Rotation sheet
+      const taskRotationRows = await this.sheetsService.readRange(`${TASK_ROTATION_SHEET}!A2:E`);
+      
+      // Get all active LOA records
+      const activeLOARecords = await this.getActiveLOA();
+      
+      // Create a map of supervisor names to LOA records
+      const loaMap = new Map<string, LOARecord>();
+      activeLOARecords.forEach(loa => {
+        loaMap.set(loa.supervisorName, loa);
+      });
+      
+      // Update Task Rotation rows
+      const updatedRows = taskRotationRows.map(row => {
+        const supervisorName = row[0] || '';
+        const rank = row[1] || '';
+        
+        const loaRecord = loaMap.get(supervisorName);
+        
+        if (loaRecord) {
+          // Supervisor has active LOA
+          return [
+            supervisorName,
+            rank,
+            'TRUE',
+            loaRecord.startDate,
+            loaRecord.endDate,
+          ];
+        } else {
+          // No active LOA
+          return [
+            supervisorName,
+            rank,
+            'FALSE',
+            '',
+            '',
+          ];
+        }
+      });
+      
+      // Write back to Task Rotation sheet
+      if (updatedRows.length > 0) {
+        await this.sheetsService.writeRange(`${TASK_ROTATION_SHEET}!A2:E${updatedRows.length + 1}`, updatedRows);
+      }
+      
+      console.log('Successfully synced LOA data to Task Rotation sheet');
+    } catch (error) {
+      console.error('Failed to sync to Task Rotation sheet:', error);
+      // Don't throw error - this is a secondary operation
+    }
   }
 }

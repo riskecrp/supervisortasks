@@ -142,4 +142,28 @@ export class TasksService {
       return [];
     }
   }
+
+  async getAvailableStatuses(): Promise<string[]> {
+    try {
+      // Read all status values from Column C (skipping header row)
+      const rows = await this.sheetsService.readRange(`${TASKS_SHEET}!C2:C`);
+      
+      // Extract unique non-empty status values
+      const statuses = new Set<string>();
+      rows.forEach(row => {
+        const status = row[0];
+        if (status && status.toString().trim() !== '') {
+          statuses.add(status.toString().trim());
+        }
+      });
+      
+      // Return as array, or default statuses if none found
+      const statusArray = Array.from(statuses);
+      return statusArray.length > 0 ? statusArray : ['Not Started', 'In Progress', 'Completed'];
+    } catch (error) {
+      console.error('Failed to get available statuses:', error);
+      // Return default statuses on error
+      return ['Not Started', 'In Progress', 'Completed'];
+    }
+  }
 }
