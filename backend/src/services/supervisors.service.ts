@@ -33,10 +33,12 @@ export class SupervisorsService {
     const supervisorDataMap = new Map<string, { rank: string, onLOA: boolean }>();
     if (taskRotationData.length > 1) {
       taskRotationData.slice(1).forEach(row => {
-        const name = row[0];
-        const rank = row[1] || '';
+        const name = row[0]?.toString().trim() || '';
+        const rank = row[1]?.toString().trim() || '';
         const loaStatus = row[2] === 'TRUE' || row[2] === true;
-        supervisorDataMap.set(name, { rank, onLOA: loaStatus });
+        if (name) {
+          supervisorDataMap.set(name, { rank, onLOA: loaStatus });
+        }
       });
     }
 
@@ -69,7 +71,7 @@ export class SupervisorsService {
       }
 
       // Get list of supervisors already in Task Rotation
-      const existingSupervisors = new Set(existingRows.slice(1).map(row => row[0]).filter(Boolean));
+      const existingSupervisors = new Set(existingRows.slice(1).map(row => row[0]?.toString().trim()).filter(Boolean));
       
       // Add any missing supervisors
       const missingNames = supervisorNames.filter(name => !existingSupervisors.has(name));
@@ -128,7 +130,7 @@ export class SupervisorsService {
       }
 
       // Check if supervisor already exists in Task Rotation
-      const supervisorExists = existingRows.slice(1).some(row => row[0] === name);
+      const supervisorExists = existingRows.slice(1).some(row => row[0]?.toString().trim() === name);
       
       if (!supervisorExists) {
         // Add new supervisor to Task Rotation
@@ -180,7 +182,7 @@ export class SupervisorsService {
       }
 
       // Find the row with this supervisor
-      const rowIndex = allRows.findIndex((row, index) => index > 0 && row[0] === name);
+      const rowIndex = allRows.findIndex((row, index) => index > 0 && row[0]?.toString().trim() === name);
       
       if (rowIndex !== -1) {
         // Remove the row
