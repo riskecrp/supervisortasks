@@ -89,19 +89,19 @@ const DiscussionsPage = () => {
           <CardTitle>Discussion Feedback Tracker</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto min-h-[800px]">
+          <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Topic</TableHead>
+                  <TableHead className="whitespace-nowrap">Date</TableHead>
+                  <TableHead className="min-w-[300px]">Topic</TableHead>
                   <TableHead>Link</TableHead>
                   {activeSupervisors.map(sup => (
-                    <TableHead key={sup.name} className="text-center">
+                    <TableHead key={sup.name} className="text-center whitespace-nowrap">
                       {sup.name}
                     </TableHead>
                   ))}
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-right whitespace-nowrap">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -114,10 +114,10 @@ const DiscussionsPage = () => {
                 ) : (
                   discussions.map((discussion) => (
                     <TableRow key={discussion.id}>
-                      <TableCell>
+                      <TableCell className="whitespace-nowrap">
                         {new Date(discussion.datePosted).toLocaleDateString()}
                       </TableCell>
-                      <TableCell className="font-medium max-w-xs truncate">
+                      <TableCell className="font-medium min-w-[300px]">
                         {discussion.topic}
                       </TableCell>
                       <TableCell>
