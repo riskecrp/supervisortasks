@@ -74,9 +74,16 @@ const TasksPage = () => {
     const isNewlyCompleted = formData.status === 'Completed' && 
                             (!editingTask || editingTask.status !== 'Completed');
     
+    // Clear completed date if status is no longer "Completed"
+    const isNoLongerCompleted = editingTask && 
+                                editingTask.status === 'Completed' && 
+                                formData.status !== 'Completed';
+    
     const taskData = {
       ...formData,
-      completedDate: isNewlyCompleted ? new Date().toISOString().split('T')[0] : editingTask?.completedDate,
+      completedDate: isNewlyCompleted 
+        ? new Date().toISOString().split('T')[0] 
+        : (isNoLongerCompleted ? undefined : editingTask?.completedDate),
       createdDate: editingTask?.createdDate || new Date().toISOString().split('T')[0],
     };
 

@@ -108,10 +108,14 @@ export class AnalyticsService {
         totalCompleted,
         thisMonth,
         thisWeek,
-        averageCompletionDays: Math.round(averageCompletionDays * 10) / 10,
+        averageCompletionDays: this.roundToOneDecimal(averageCompletionDays),
         onLOA: supervisor.onLOA || false,
       };
     });
+  }
+
+  private roundToOneDecimal(value: number): number {
+    return Math.round(value * 10) / 10;
   }
 
   private calculateWorkloadDistribution(metrics: SupervisorMetrics[]) {
@@ -146,10 +150,10 @@ export class AnalyticsService {
     const distributionStdDev = Math.sqrt(variance);
 
     return {
-      averageTasksPerSupervisor: Math.round(averageTasksPerSupervisor * 10) / 10,
+      averageTasksPerSupervisor: this.roundToOneDecimal(averageTasksPerSupervisor),
       highestWorkload,
       lowestWorkload,
-      distributionStdDev: Math.round(distributionStdDev * 10) / 10,
+      distributionStdDev: this.roundToOneDecimal(distributionStdDev),
     };
   }
 }

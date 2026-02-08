@@ -125,8 +125,9 @@ export class SheetsService {
       const rows = await this.readRange(range);
       for (let i = 0; i < rows.length; i++) {
         if (rows[i][columnIndex] === value) {
-          // Return 1-based row number (accounting for header if range starts at row 2)
-          const startRow = parseInt(range.match(/!A(\d+)/)?.[1] || '1');
+          // Extract start row from range (e.g., "Sheet!A2:E" -> 2, "Sheet!B3:D10" -> 3)
+          const rangeMatch = range.match(/!([A-Z]+)(\d+)/);
+          const startRow = rangeMatch ? parseInt(rangeMatch[2]) : 1;
           return startRow + i;
         }
       }
