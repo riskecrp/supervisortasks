@@ -88,7 +88,9 @@ const TasksPage = () => {
     
     const taskData = {
       ...formData,
-      completedDate: formData.status === 'Completed' ? new Date().toISOString() : undefined,
+      completedDate: formData.status === 'Completed' 
+        ? (editingTask?.completedDate || new Date().toISOString()) 
+        : undefined,
       createdDate: editingTask?.createdDate || new Date().toISOString(),
     };
 
@@ -116,12 +118,30 @@ const TasksPage = () => {
         updates: {
           ...task,
           status: newStatus,
-          completedDate: newStatus === 'Completed' ? new Date().toISOString() : undefined,
+          completedDate: newStatus === 'Completed' ? (task.completedDate || new Date().toISOString()) : undefined,
         },
       });
       toast.success('Task status updated successfully');
     } catch (error) {
       toast.error('Failed to update task status');
+    }
+  };
+
+  const handleSupervisorChange = async (taskId: string, newSupervisor: string) => {
+    const task = tasks?.find(t => t.id === taskId);
+    if (!task) return;
+
+    try {
+      await updateTask.mutateAsync({
+        id: taskId,
+        updates: {
+          ...task,
+          claimedBy: newSupervisor,
+        },
+      });
+      toast.success('Task supervisor updated successfully');
+    } catch (error) {
+      toast.error('Failed to update task supervisor');
     }
   };
 
@@ -215,7 +235,14 @@ const TasksPage = () => {
                           {task.task}
                         </div>
                       </TableCell>
-                      <TableCell>{task.claimedBy}</TableCell>
+                      <TableCell>
+                        <Select
+                          value={task.claimedBy}
+                          onChange={(e) => handleSupervisorChange(task.id, e.target.value)}
+                          options={activeSupervisors.map(s => ({ value: s.name, label: s.name }))}
+                          className="w-40"
+                        />
+                      </TableCell>
                       <TableCell>
                         <Select
                           value={task.status}
