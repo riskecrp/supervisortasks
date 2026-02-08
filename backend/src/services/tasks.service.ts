@@ -12,7 +12,8 @@ export class TasksService {
   }
 
   async getAllTasks(): Promise<Task[]> {
-    const rows = await this.sheetsService.readRange(this.sheetsService.buildRange(TASKS_SHEET, 'A2:E1000'));
+    // Read only the core 3 columns that existed originally
+    const rows = await this.sheetsService.readRange(this.sheetsService.buildRange(TASKS_SHEET, 'A2:C1000'));
     
     // Filter out empty rows while tracking original row numbers
     const tasks: Task[] = [];
@@ -28,9 +29,9 @@ export class TasksService {
           id: `task-${index + 2}`, // Use original row number (index + 2 because A2 is row 2)
           task: row[0] || '',
           claimedBy: row[1] || '',
-          status: (row[2] as any) || 'Not Started',
-          completedDate: row[3] || '',
-          createdDate: row[4] || new Date().toISOString().split('T')[0],
+          status: (row[2] as any) || 'Assigned',
+          completedDate: '',
+          createdDate: '',
         });
       }
     });
@@ -44,16 +45,14 @@ export class TasksService {
   }
 
   async createTask(task: Omit<Task, 'id'>): Promise<Task> {
-    const createdDate = new Date().toISOString().split('T')[0];
+    // Only write the core 3 columns to maintain backward compatibility
     const newRow = [
       task.task,
       task.claimedBy || '',
-      task.status || 'Not Started',
-      task.completedDate || '',
-      createdDate,
+      task.status || 'Assigned',
     ];
 
-    await this.sheetsService.appendRange(this.sheetsService.buildRange(TASKS_SHEET, 'A:E'), [newRow]);
+    await this.sheetsService.appendRange(this.sheetsService.buildRange(TASKS_SHEET, 'A:C'), [newRow]);
     
     const tasks = await this.getAllTasks();
     return tasks[tasks.length - 1];
@@ -69,23 +68,19 @@ export class TasksService {
 
     const updatedTask = { ...currentTask, ...updates };
     
-    // If status changed to Completed, set completed date
-    if (updates.status === 'Completed' && currentTask.status !== 'Completed') {
-      updatedTask.completedDate = new Date().toISOString().split('T')[0];
-      
-      // Add to task history
-      await this.addToHistory(updatedTask);
-    }
-
+    // Only write back the core 3 columns to preserve any other data in the sheet
     const updatedRow = [
       updatedTask.task,
       updatedTask.claimedBy,
       updatedTask.status,
-      updatedTask.completedDate,
-      updatedTask.createdDate,
     ];
 
-    await this.sheetsService.writeRange(this.sheetsService.buildRange(TASKS_SHEET, `A${rowNumber}:E${rowNumber}`), [updatedRow]);
+    await this.sheetsService.writeRange(this.sheetsService.buildRange(TASKS_SHEET, `A${rowNumber}:C${rowNumber}`), [updatedRow]);
+    
+    // If task is marked as completed, add to task history
+    if (updatedTask.status === 'Completed' && currentTask.status !== 'Completed') {
+      await this.addToHistory(updatedTask);
+    }
     
     return updatedTask;
   }
@@ -93,33 +88,32 @@ export class TasksService {
   async deleteTask(id: string): Promise<void> {
     const rowNumber = parseInt(id.split('-')[1]);
     
-    // Read all data
-    const allRows = await this.sheetsService.readRange(this.sheetsService.buildRange(TASKS_SHEET, 'A:E'));
+    // Read all data from the core 3 columns
+    const allRows = await this.sheetsService.readRange(this.sheetsService.buildRange(TASKS_SHEET, 'A:C'));
     
     // Remove the specific row (accounting for 0-based index)
     allRows.splice(rowNumber - 1, 1);
     
     // Clear and rewrite
-    await this.sheetsService.clearRange(this.sheetsService.buildRange(TASKS_SHEET, 'A2:E1000'));
+    await this.sheetsService.clearRange(this.sheetsService.buildRange(TASKS_SHEET, 'A2:C1000'));
     if (allRows.length > 1) {
-      await this.sheetsService.writeRange(this.sheetsService.buildRange(TASKS_SHEET, 'A2:E1000'), allRows.slice(1));
+      await this.sheetsService.writeRange(this.sheetsService.buildRange(TASKS_SHEET, 'A2:C1000'), allRows.slice(1));
     }
   }
 
   private async addToHistory(task: Task): Promise<void> {
-    if (!task.claimedBy || !task.completedDate || !task.createdDate) {
+    if (!task.claimedBy) {
       return;
     }
 
-    const completedDate = new Date(task.completedDate);
-    const createdDate = new Date(task.createdDate);
-    const durationDays = Math.floor((completedDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
-
+    const completedDate = new Date().toISOString().split('T')[0];
+    
+    // Since we don't track creation date anymore, set duration to 0
     const historyRow = [
       task.task,
       task.claimedBy,
-      task.completedDate,
-      durationDays.toString(),
+      completedDate,
+      '0', // Duration days - not tracked without creation date
     ];
 
     try {

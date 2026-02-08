@@ -43,12 +43,9 @@ const TasksPage = () => {
     'Completed'
   ];
 
-  const isOverdue = (createdDate: string, status: Task['status']) => {
-    if (status === 'Completed') return false;
-    const created = new Date(createdDate);
-    const now = new Date();
-    const daysDiff = (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
-    return daysDiff > 5;
+  // Note: Overdue tracking has been disabled since createdDate is no longer tracked in the sheet
+  const isOverdue = (_createdDate: string | undefined, _status: Task['status']) => {
+    return false; // Disabled - would need createdDate to be tracked in the sheet
   };
 
   const filteredTasks = tasks?.filter(task => {
@@ -88,10 +85,7 @@ const TasksPage = () => {
     
     const taskData = {
       ...formData,
-      completedDate: formData.status === 'Completed' 
-        ? (editingTask?.completedDate || new Date().toISOString()) 
-        : undefined,
-      createdDate: editingTask?.createdDate || new Date().toISOString(),
+      // completedDate and createdDate are no longer tracked in the sheet
     };
 
     if (editingTask) {
@@ -118,7 +112,6 @@ const TasksPage = () => {
         updates: {
           ...task,
           status: newStatus,
-          completedDate: newStatus === 'Completed' ? (task.completedDate || new Date().toISOString()) : undefined,
         },
       });
       toast.success('Task status updated successfully');
@@ -209,15 +202,13 @@ const TasksPage = () => {
                 <TableHead className="min-w-[300px]">Task</TableHead>
                 <TableHead>Assigned To</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead>Completed</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredTasks.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-gray-400 py-8">
+                  <TableCell colSpan={4} className="text-center text-gray-400 py-8">
                     No tasks found
                   </TableCell>
                 </TableRow>
@@ -250,14 +241,6 @@ const TasksPage = () => {
                           options={statusOptions.map(s => ({ value: s, label: s }))}
                           className="w-64"
                         />
-                      </TableCell>
-                      <TableCell className={overdue ? 'text-red-400' : ''}>
-                        {new Date(task.createdDate).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        {task.completedDate
-                          ? new Date(task.completedDate).toLocaleDateString()
-                          : '-'}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">

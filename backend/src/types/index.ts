@@ -4,7 +4,7 @@ export interface Task {
   claimedBy: string;
   status: 'Assigned' | 'Claimed' | 'Pending Reach Out' | 'Pending Meeting' | 'Pending Employee Reach Out' | 'Pending Discussion' | 'Completed';
   completedDate?: string;
-  createdDate: string;
+  createdDate?: string;
 }
 
 export interface Discussion {
