@@ -30,9 +30,20 @@ export class AnalyticsService {
     ]);
 
     const totalTasks = tasks.length;
-    const completedTasks = tasks.filter(t => t.status === 'Completed').length;
-    const inProgressTasks = tasks.filter(t => t.status === 'In Progress').length;
-    const notStartedTasks = tasks.filter(t => t.status === 'Not Started').length;
+    const completedTasks = tasks.filter(t => 
+      t.status && t.status.toString().trim().toLowerCase() === 'completed'
+    ).length;
+    
+    // Count other statuses dynamically
+    const inProgressTasks = tasks.filter(t => 
+      t.status && 
+      t.status.toString().trim().toLowerCase() !== 'completed' &&
+      t.status.toString().trim() !== ''
+    ).length;
+    
+    const notStartedTasks = tasks.filter(t => 
+      !t.status || t.status.toString().trim() === ''
+    ).length;
 
     const totalSupervisors = supervisors.length;
     const activeSupervisors = supervisors.filter(s => !s.onLOA).length;
@@ -82,36 +93,45 @@ export class AnalyticsService {
     const startOfWeek = new Date(now);
     startOfWeek.setDate(now.getDate() - now.getDay());
 
-    // Get task history for completion metrics
+    // Get task history for completion metrics (as fallback)
     const taskHistory = await this.tasksService.getTaskHistory();
 
     return supervisors.map(supervisor => {
-      // Get completed tasks from history
-      const completedTasks = taskHistory.filter(
-        h => h.supervisor === supervisor.name
+      // Count completed tasks directly from Tasks sheet where status = "Completed" and taskOwner exists
+      const completedTasksFromSheet = tasks.filter(
+        t => t.taskOwner && 
+             t.taskOwner.trim() === supervisor.name && 
+             t.status && 
+             t.status.toString().trim().toLowerCase() === 'completed'
       );
       
-      const totalCompleted = completedTasks.length;
+      const totalCompleted = completedTasksFromSheet.length;
       
-      // Count tasks completed this month
-      const thisMonth = completedTasks.filter(h => {
-        if (!h.completedDate) return false;
-        const completedDate = new Date(h.completedDate);
-        return completedDate >= startOfMonth;
+      // Count tasks completed this month (using claimedDate as proxy since we don't have completion date in Tasks sheet)
+      // Note: This is an approximation. For accurate month/week counts, use task history if available
+      const tasksWithDates = completedTasksFromSheet.filter(t => t.claimedDate);
+      
+      const thisMonth = tasksWithDates.filter(t => {
+        if (!t.claimedDate) return false;
+        const claimedDate = new Date(t.claimedDate);
+        return claimedDate >= startOfMonth;
       }).length;
 
       // Count tasks completed this week
-      const thisWeek = completedTasks.filter(h => {
-        if (!h.completedDate) return false;
-        const completedDate = new Date(h.completedDate);
-        return completedDate >= startOfWeek;
+      const thisWeek = tasksWithDates.filter(t => {
+        if (!t.claimedDate) return false;
+        const claimedDate = new Date(t.claimedDate);
+        return claimedDate >= startOfWeek;
       }).length;
 
-      // Calculate average completion days from task history
-      const totalDays = completedTasks.reduce((sum, h) => {
+      // Calculate average completion days from task history (if available)
+      const historyForSupervisor = taskHistory.filter(
+        h => h.supervisor === supervisor.name
+      );
+      const totalDays = historyForSupervisor.reduce((sum, h) => {
         return sum + (h.durationDays || 0);
       }, 0);
-      const averageCompletionDays = totalCompleted > 0 ? totalDays / totalCompleted : 0;
+      const averageCompletionDays = historyForSupervisor.length > 0 ? totalDays / historyForSupervisor.length : 0;
 
       return {
         name: supervisor.name,
