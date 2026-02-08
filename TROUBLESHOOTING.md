@@ -79,7 +79,52 @@ If your tab has a different name, you can either:
   const TASKS_SHEET = 'Your Tab Name Here';
   ```
 
-### 5. Test the Connection
+### 5. Use Built-in Validation Tools
+
+**The system now includes validation endpoints to help diagnose issues:**
+
+**Check sheet structure:**
+```bash
+curl http://localhost:3001/api/tasks/validate
+```
+
+This will return a JSON object with:
+- `valid`: Whether the sheet structure is correct
+- `issues`: Array of problems found
+- `suggestions`: Array of recommended fixes
+- `sheetData`: Sample data from the sheet
+
+**Get a detailed sheet summary:**
+```bash
+curl http://localhost:3001/api/tasks/sheet-summary
+```
+
+This returns a human-readable summary showing:
+- Headers in row 1
+- Sample data from the first few rows
+- Any validation issues
+- Suggestions for fixing issues
+
+**Example validation response:**
+```json
+{
+  "valid": false,
+  "issues": [
+    "5 tasks have empty 'Claimed By' values",
+    "Row 2: Invalid status 'in progress' (valid options: Assigned, Claimed, ...)"
+  ],
+  "suggestions": [
+    "Fill in the 'Claimed By' column (column B) with supervisor names",
+    "Ensure status values (column C) are one of: Assigned, Claimed, Pending Reach Out, ..."
+  ],
+  "sheetData": {
+    "headers": ["Task", "Claimed By", "Status", "Completed Date", "Created Date"],
+    "sampleRows": [...]
+  }
+}
+```
+
+### 6. Test the Connection
 
 **Run the backend and check the logs:**
 
@@ -112,7 +157,7 @@ Returning X valid tasks after filtering empty rows
 **"Retrieved 0 rows from Google Sheets"**
 - Fix: Add data to your sheet starting from row 2 (step 3)
 
-### 6. Verify Frontend Configuration
+### 7. Verify Frontend Configuration
 
 **Ensure the frontend can connect to the backend:**
 
@@ -131,7 +176,7 @@ If missing, create it:
 echo "VITE_API_URL=http://localhost:3001/api" > frontend/.env
 ```
 
-### 7. Test End-to-End
+### 8. Test End-to-End
 
 1. Start the backend:
    ```bash
@@ -147,7 +192,7 @@ echo "VITE_API_URL=http://localhost:3001/api" > frontend/.env
 4. Navigate to the Tasks page
 5. You should see tasks loaded from your Google Sheet
 
-### 8. Debugging Tips
+### 9. Debugging Tips
 
 **Enable verbose logging:**
 
