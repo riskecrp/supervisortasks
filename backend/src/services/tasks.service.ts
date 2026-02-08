@@ -30,8 +30,6 @@ export class TasksService {
           task: row[0] || '',
           claimedBy: row[1] || '',
           status: (row[2] as any) || 'Assigned',
-          completedDate: '',
-          createdDate: '',
         });
       }
     });
@@ -108,12 +106,12 @@ export class TasksService {
 
     const completedDate = new Date().toISOString().split('T')[0];
     
-    // Since we don't track creation date anymore, set duration to 0
+    // Since we don't track creation date, use 'N/A' for duration
     const historyRow = [
       task.task,
       task.claimedBy,
       completedDate,
-      '0', // Duration days - not tracked without creation date
+      'N/A', // Duration not available without creation date tracking
     ];
 
     try {
