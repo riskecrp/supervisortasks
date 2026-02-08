@@ -32,17 +32,19 @@ export function createTasksRouter(tasksService: TasksService): Router {
   // Create task
   router.post('/', async (req: Request, res: Response) => {
     try {
-      const { task, claimedBy, status } = req.body;
+      const { taskList, taskOwner, status, claimedDate, dueDate, notes } = req.body;
       
-      if (!task) {
+      if (!taskList) {
         return res.status(400).json({ error: 'Task name is required' });
       }
 
       const newTask = await tasksService.createTask({
-        task,
-        claimedBy: claimedBy || '',
+        taskList,
+        taskOwner: taskOwner || '',
         status: status || 'Not Started',
-        createdDate: new Date().toISOString().split('T')[0],
+        claimedDate: claimedDate || new Date().toISOString().split('T')[0],
+        dueDate: dueDate || '',
+        notes: notes || '',
       });
       
       res.status(201).json(newTask);

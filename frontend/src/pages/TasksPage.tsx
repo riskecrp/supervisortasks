@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, Filter } from 'lucide-react';
+import { Plus, Pencil, Trash2, Filter, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -27,9 +27,12 @@ const TasksPage = () => {
   const [showCompleted, setShowCompleted] = useState(false);
   
   const [formData, setFormData] = useState({
-    task: '',
-    claimedBy: '',
+    taskList: '',
+    taskOwner: '',
     status: 'Not Started',
+    claimedDate: '',
+    dueDate: '',
+    notes: '',
   });
 
   const activeSupervisors = supervisors?.filter(s => s.active) || [];
@@ -39,7 +42,7 @@ const TasksPage = () => {
 
   const filteredTasks = tasks?.filter(task => {
     const matchesStatus = statusFilter === 'all' || task.status === statusFilter;
-    const matchesSupervisor = supervisorFilter === 'all' || task.claimedBy === supervisorFilter;
+    const matchesSupervisor = supervisorFilter === 'all' || task.taskOwner === supervisorFilter;
     const matchesCompleted = showCompleted ? true : task.status !== 'Completed';
     return matchesStatus && matchesSupervisor && matchesCompleted;
   }) || [];
@@ -48,16 +51,22 @@ const TasksPage = () => {
     if (task) {
       setEditingTask(task);
       setFormData({
-        task: task.task,
-        claimedBy: task.claimedBy,
+        taskList: task.taskList,
+        taskOwner: task.taskOwner,
         status: task.status,
+        claimedDate: task.claimedDate,
+        dueDate: task.dueDate,
+        notes: task.notes,
       });
     } else {
       setEditingTask(null);
       setFormData({
-        task: '',
-        claimedBy: activeSupervisors[0]?.name || '',
+        taskList: '',
+        taskOwner: activeSupervisors[0]?.name || '',
         status: statuses[0] || 'Not Started',
+        claimedDate: new Date().toISOString().split('T')[0],
+        dueDate: '',
+        notes: '',
       });
     }
     setIsModalOpen(true);
@@ -66,27 +75,22 @@ const TasksPage = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingTask(null);
-    setFormData({ task: '', claimedBy: '', status: statuses[0] || 'Not Started' });
+    setFormData({ 
+      taskList: '', 
+      taskOwner: '', 
+      status: statuses[0] || 'Not Started',
+      claimedDate: '',
+      dueDate: '',
+      notes: '',
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Check if status is changing to "Completed"
-    const isNewlyCompleted = formData.status === 'Completed' && 
-                            (!editingTask || editingTask.status !== 'Completed');
-    
-    // Clear completed date if status is no longer "Completed"
-    const isNoLongerCompleted = editingTask && 
-                                editingTask.status === 'Completed' && 
-                                formData.status !== 'Completed';
-    
     const taskData = {
       ...formData,
-      completedDate: isNewlyCompleted 
-        ? new Date().toISOString().split('T')[0] 
-        : (isNoLongerCompleted ? undefined : editingTask?.completedDate),
-      createdDate: editingTask?.createdDate || new Date().toISOString().split('T')[0],
+      claimedDate: formData.claimedDate || new Date().toISOString().split('T')[0],
     };
 
     if (editingTask) {
@@ -104,20 +108,28 @@ const TasksPage = () => {
   };
 
   const isTaskOverdue = (task: Task): boolean => {
-    // Task is overdue if: not completed AND current date > (created date + 5 days)
+    // Task is overdue if: not completed AND has been open for more than 5 days
     if (task.status === 'Completed') {
       return false;
     }
     
-    const createdDate = new Date(task.createdDate);
+    const claimedDate = new Date(task.claimedDate);
     const currentDate = new Date();
-    const daysElapsed = Math.floor((currentDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
+    const daysElapsed = Math.floor((currentDate.getTime() - claimedDate.getTime()) / (1000 * 60 * 60 * 24));
     
     return daysElapsed > 5;
   };
 
+  const getDaysOpen = (task: Task): number => {
+    if (task.status === 'Completed') {
+      return 0;
+    }
+    const claimedDate = new Date(task.claimedDate);
+    const currentDate = new Date();
+    return Math.floor((currentDate.getTime() - claimedDate.getTime()) / (1000 * 60 * 60 * 24));
+  };
+
   const getStatusBadge = (status: string) => {
-    // Default to 'default' variant for unknown statuses
     const variants: Record<string, 'default' | 'warning' | 'success'> = {
       'Not Started': 'default',
       'In Progress': 'warning',
@@ -190,36 +202,60 @@ const TasksPage = () => {
                 <TableHead>Task</TableHead>
                 <TableHead>Assigned To</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead>Completed</TableHead>
+                <TableHead>Claimed Date</TableHead>
+                <TableHead>Due Date</TableHead>
+                <TableHead>Days Open</TableHead>
+                <TableHead>Notes</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredTasks.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-gray-500 py-8">
+                  <TableCell colSpan={8} className="text-center text-gray-500 py-8">
                     No tasks found
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredTasks.map((task) => {
                   const isOverdue = isTaskOverdue(task);
+                  const daysOpen = getDaysOpen(task);
                   return (
                     <TableRow 
                       key={task.id}
                       className={isOverdue ? 'bg-red-50 hover:bg-red-100' : ''}
                     >
-                      <TableCell className="font-medium">{task.task}</TableCell>
-                      <TableCell>{task.claimedBy}</TableCell>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          {isOverdue && (
+                            <AlertTriangle className="w-4 h-4 text-red-600" />
+                          )}
+                          {task.taskList}
+                        </div>
+                      </TableCell>
+                      <TableCell>{task.taskOwner}</TableCell>
                       <TableCell>{getStatusBadge(task.status)}</TableCell>
                       <TableCell>
-                        {new Date(task.createdDate).toLocaleDateString()}
+                        {task.claimedDate
+                          ? new Date(task.claimedDate).toLocaleDateString()
+                          : '-'}
                       </TableCell>
                       <TableCell>
-                        {task.completedDate
-                          ? new Date(task.completedDate).toLocaleDateString()
+                        {task.dueDate
+                          ? new Date(task.dueDate).toLocaleDateString()
                           : '-'}
+                      </TableCell>
+                      <TableCell>
+                        {task.status !== 'Completed' ? (
+                          <span className={daysOpen > 5 ? 'text-red-600 font-semibold' : ''}>
+                            {daysOpen} {daysOpen === 1 ? 'day' : 'days'}
+                          </span>
+                        ) : (
+                          '-'
+                        )}
+                      </TableCell>
+                      <TableCell className="max-w-xs truncate" title={task.notes}>
+                        {task.notes || '-'}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
@@ -256,14 +292,14 @@ const TasksPage = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
             label="Task Description"
-            value={formData.task}
-            onChange={(e) => setFormData({ ...formData, task: e.target.value })}
+            value={formData.taskList}
+            onChange={(e) => setFormData({ ...formData, taskList: e.target.value })}
             required
           />
           <Select
             label="Assigned To"
-            value={formData.claimedBy}
-            onChange={(e) => setFormData({ ...formData, claimedBy: e.target.value })}
+            value={formData.taskOwner}
+            onChange={(e) => setFormData({ ...formData, taskOwner: e.target.value })}
             options={activeSupervisors.map(s => ({ value: s.name, label: s.name }))}
             required
           />
@@ -273,6 +309,24 @@ const TasksPage = () => {
             onChange={(e) => setFormData({ ...formData, status: e.target.value })}
             options={statuses.map(s => ({ value: s, label: s }))}
             required
+          />
+          <Input
+            label="Claimed/Assigned Date"
+            type="date"
+            value={formData.claimedDate}
+            onChange={(e) => setFormData({ ...formData, claimedDate: e.target.value })}
+          />
+          <Input
+            label="Due Date"
+            type="date"
+            value={formData.dueDate}
+            onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+          />
+          <Input
+            label="Notes"
+            value={formData.notes}
+            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+            placeholder="Optional notes about this task"
           />
           <div className="flex justify-end gap-3 mt-6">
             <Button type="button" variant="secondary" onClick={handleCloseModal}>

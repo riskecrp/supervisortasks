@@ -12,7 +12,7 @@ export class TasksService {
   }
 
   async getAllTasks(): Promise<Task[]> {
-    const rows = await this.sheetsService.readRange(`${TASKS_SHEET}!A2:E`);
+    const rows = await this.sheetsService.readRange(`${TASKS_SHEET}!A2:F`);
     
     // Filter out empty rows
     const filteredRows = rows.filter(row => {
@@ -27,11 +27,12 @@ export class TasksService {
     
     return filteredRows.map((row, index) => ({
       id: `task-${index + 2}`,
-      task: row[0] || '',
-      claimedBy: row[1] || '',
+      taskList: row[0] || '',
+      taskOwner: row[1] || '',
       status: (row[2] as any) || 'Not Started',
-      completedDate: row[3] || '',
-      createdDate: row[4] || new Date().toISOString().split('T')[0],
+      claimedDate: row[3] || '',
+      dueDate: row[4] || '',
+      notes: row[5] || '',
     }));
   }
 
@@ -41,16 +42,16 @@ export class TasksService {
   }
 
   async createTask(task: Omit<Task, 'id'>): Promise<Task> {
-    const createdDate = new Date().toISOString().split('T')[0];
     const newRow = [
-      task.task,
-      task.claimedBy || '',
+      task.taskList,
+      task.taskOwner || '',
       task.status || 'Not Started',
-      task.completedDate || '',
-      createdDate,
+      task.claimedDate || new Date().toISOString().split('T')[0],
+      task.dueDate || '',
+      task.notes || '',
     ];
 
-    await this.sheetsService.appendRange(`${TASKS_SHEET}!A:E`, [newRow]);
+    await this.sheetsService.appendRange(`${TASKS_SHEET}!A:F`, [newRow]);
     
     const tasks = await this.getAllTasks();
     return tasks[tasks.length - 1];
@@ -66,23 +67,21 @@ export class TasksService {
 
     const updatedTask = { ...currentTask, ...updates };
     
-    // If status changed to Completed, set completed date
+    // If status changed to Completed, add to task history
     if (updates.status === 'Completed' && currentTask.status !== 'Completed') {
-      updatedTask.completedDate = new Date().toISOString().split('T')[0];
-      
-      // Add to task history
       await this.addToHistory(updatedTask);
     }
 
     const updatedRow = [
-      updatedTask.task,
-      updatedTask.claimedBy,
+      updatedTask.taskList,
+      updatedTask.taskOwner,
       updatedTask.status,
-      updatedTask.completedDate,
-      updatedTask.createdDate,
+      updatedTask.claimedDate,
+      updatedTask.dueDate,
+      updatedTask.notes,
     ];
 
-    await this.sheetsService.writeRange(`${TASKS_SHEET}!A${rowNumber}:E${rowNumber}`, [updatedRow]);
+    await this.sheetsService.writeRange(`${TASKS_SHEET}!A${rowNumber}:F${rowNumber}`, [updatedRow]);
     
     return updatedTask;
   }
@@ -91,31 +90,37 @@ export class TasksService {
     const rowNumber = parseInt(id.split('-')[1]);
     
     // Read all data
-    const allRows = await this.sheetsService.readRange(`${TASKS_SHEET}!A:E`);
+    const allRows = await this.sheetsService.readRange(`${TASKS_SHEET}!A:F`);
     
     // Remove the specific row (accounting for 0-based index)
     allRows.splice(rowNumber - 1, 1);
     
     // Clear and rewrite
-    await this.sheetsService.clearRange(`${TASKS_SHEET}!A2:E`);
+    await this.sheetsService.clearRange(`${TASKS_SHEET}!A2:F`);
     if (allRows.length > 1) {
-      await this.sheetsService.writeRange(`${TASKS_SHEET}!A2:E`, allRows.slice(1));
+      await this.sheetsService.writeRange(`${TASKS_SHEET}!A2:F`, allRows.slice(1));
     }
   }
 
   private async addToHistory(task: Task): Promise<void> {
-    if (!task.claimedBy || !task.completedDate || !task.createdDate) {
+    if (!task.taskOwner || !task.claimedDate) {
+      console.warn('Skipping task history: Missing required fields', {
+        taskList: task.taskList,
+        hasOwner: !!task.taskOwner,
+        hasClaimedDate: !!task.claimedDate,
+      });
       return;
     }
 
-    const completedDate = new Date(task.completedDate);
-    const createdDate = new Date(task.createdDate);
-    const durationDays = Math.floor((completedDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
+    const completedDate = new Date().toISOString().split('T')[0];
+    const claimedDate = new Date(task.claimedDate);
+    const completedDateTime = new Date(completedDate);
+    const durationDays = Math.floor((completedDateTime.getTime() - claimedDate.getTime()) / (1000 * 60 * 60 * 24));
 
     const historyRow = [
-      task.task,
-      task.claimedBy,
-      task.completedDate,
+      task.taskList,
+      task.taskOwner,
+      completedDate,
       durationDays.toString(),
     ];
 

@@ -1,10 +1,11 @@
 export interface Task {
   id: string;
-  task: string;
-  claimedBy: string;
+  taskList: string;
+  taskOwner: string;
   status: string;
-  completedDate?: string;
-  createdDate: string;
+  claimedDate: string;
+  dueDate: string;
+  notes: string;
 }
 
 export interface Discussion {
@@ -17,6 +18,7 @@ export interface Discussion {
 
 export interface Supervisor {
   name: string;
+  rank?: string;
   active: boolean;
   onLOA: boolean;
 }

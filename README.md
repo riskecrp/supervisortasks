@@ -273,31 +273,65 @@ supervisortasks/
 
 ## Google Sheets Structure
 
+The application integrates with the following Google Sheet tabs:
+
 ### Tasks Sheet
-- Column A: Task
-- Column B: Claimed By
-- Column C: Status
-- Column D: Completed Date
-- Column E: Created Date
+- **Column A**: Task List - Description of the task
+- **Column B**: Task Owner - Name of the supervisor assigned to the task
+- **Column C**: Status - Current status (Not Started, In Progress, Completed, etc.)
+- **Column D**: Claimed/Assigned Date - Date the task was claimed or assigned
+- **Column E**: Due Date - Target completion date
+- **Column F**: Notes - Additional notes about the task
+
+**Features:**
+- Tasks open for more than 5 days are highlighted in red
+- Completed tasks are moved to Task History automatically
+- Supervisor names come from the Discussions Pending Feedback sheet headers
 
 ### Discussions Pending Feedback Sheet
-- Column A: Date Posted
-- Column B: Topic
-- Column C: Link
-- Columns D+: Dynamic supervisor columns (checkboxes)
+- **Column A**: Date Posted
+- **Column B**: Topic
+- **Column C**: Direct Link
+- **Columns D+**: Dynamic supervisor columns (TRUE/FALSE for feedback status)
+
+**Features:**
+- Adding a supervisor adds a new column dynamically
+- Removing a supervisor removes their column
+- Supervisor list is the source of truth for the application
+
+### Task Rotation Sheet
+- **Column A**: Employee Name - Supervisor name
+- **Column B**: Rank - Supervisor rank/title
+- **Column C**: LOA? - Leave of Absence status (TRUE/FALSE)
+- **Column D**: LOA Start Date - Start date of leave
+- **Column E**: LOA End Date - End date of leave
+
+**Features:**
+- Automatically synced when supervisors are added/removed
+- LOA status automatically updated from LOA Tracking sheet
+- Used by Google Sheet formulas for task distribution
 
 ### LOA Tracking Sheet
-- Column A: Supervisor Name
-- Column B: Start Date
-- Column C: End Date
-- Column D: Reason
-- Column E: Status
+- **Column A**: Supervisor Name
+- **Column B**: Start Date
+- **Column C**: End Date
+- **Column D**: Reason
+- **Column E**: Status (Active/Completed)
+
+**Features:**
+- Active LOA records automatically update Task Rotation sheet
+- Changes are immediately reflected in supervisor availability
 
 ### Task History Sheet
-- Column A: Task Name
-- Column B: Supervisor
-- Column C: Completed Date
-- Column D: Duration/Days Taken
+- **Column A**: Task Name
+- **Column B**: Supervisor
+- **Column C**: Completed Date
+- **Column D**: Duration/Days Taken
+
+**Features:**
+- Automatically populated when tasks are marked as Completed
+- Used for analytics and workload tracking
+- Tracks completion time from Claimed Date to completion
 
 ## Troubleshooting
 

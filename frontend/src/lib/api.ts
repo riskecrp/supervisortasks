@@ -34,7 +34,7 @@ export const discussionsAPI = {
 // Supervisors API
 export const supervisorsAPI = {
   getAll: () => api.get<Supervisor[]>('/supervisors'),
-  add: (name: string) => api.post<Supervisor>('/supervisors', { name }),
+  add: (data: { name: string; rank?: string }) => api.post<Supervisor>('/supervisors', data),
   remove: (name: string) => api.delete(`/supervisors/${name}`),
 };
 
