@@ -59,13 +59,21 @@ export class SheetsService {
 
   async readRange(range: string): Promise<any[][]> {
     try {
+      console.log(`Reading range: ${range} from spreadsheet: ${this.spreadsheetId}`);
       const response = await this.sheets.spreadsheets.values.get({
         spreadsheetId: this.spreadsheetId,
         range,
       });
-      return response.data.values || [];
+      const values = response.data.values || [];
+      console.log(`Successfully read ${values.length} rows from range: ${range}`);
+      return values;
     } catch (error: any) {
       console.error(`Error reading range ${range}:`, error.message);
+      if (error.code === 404) {
+        console.error(`Sheet or range not found. Please verify the tab name and range are correct.`);
+      } else if (error.code === 403) {
+        console.error(`Permission denied. Please verify the service account has access to the spreadsheet.`);
+      }
       throw new Error(`Failed to read from Google Sheets: ${error.message}`);
     }
   }
