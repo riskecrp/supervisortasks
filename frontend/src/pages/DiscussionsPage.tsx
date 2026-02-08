@@ -117,7 +117,7 @@ const DiscussionsPage = () => {
                       <TableCell className="whitespace-nowrap">
                         {new Date(discussion.datePosted).toLocaleDateString()}
                       </TableCell>
-                      <TableCell className="font-medium min-w-[300px]">
+                      <TableCell className="font-medium min-w-[300px] max-w-[500px] break-words">
                         {discussion.topic}
                       </TableCell>
                       <TableCell>
