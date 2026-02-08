@@ -74,7 +74,7 @@ app.get('/health', (req, res) => {
 });
 
 // API Routes
-app.use('/api/tasks', createTasksRouter(tasksService));
+app.use('/api/tasks', createTasksRouter(tasksService, sheetsService));
 app.use('/api/discussions', createDiscussionsRouter(discussionsService));
 app.use('/api/supervisors', createSupervisorsRouter(supervisorsService));
 app.use('/api/loa', createLOARouter(loaService));

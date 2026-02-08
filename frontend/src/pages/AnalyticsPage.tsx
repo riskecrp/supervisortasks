@@ -143,9 +143,9 @@ const AnalyticsPage = () => {
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={400}>
-            <BarChart data={topPerformers}>
+            <BarChart data={topPerformers} margin={{ bottom: 100 }}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
+              <XAxis dataKey="name" angle={-45} textAnchor="end" height={120} interval={0} />
               <YAxis />
               <Tooltip />
               <Legend />
@@ -162,9 +162,9 @@ const AnalyticsPage = () => {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={weeklyPerformance}>
+              <BarChart data={weeklyPerformance} margin={{ bottom: 80 }}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
+                <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} interval={0} />
                 <YAxis />
                 <Tooltip />
                 <Bar dataKey="thisWeek" fill="#22c55e" name="This Week" />
@@ -179,9 +179,9 @@ const AnalyticsPage = () => {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={topPerformers.slice(0, 5)}>
+              <LineChart data={topPerformers.slice(0, 5)} margin={{ bottom: 20, left: 10, right: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
+                <XAxis dataKey="name" angle={-15} textAnchor="end" height={60} interval={0} />
                 <YAxis />
                 <Tooltip />
                 <Legend />
@@ -202,7 +202,7 @@ const AnalyticsPage = () => {
             <table className="min-w-full divide-y divide-gray-700">
               <thead className="bg-gray-900/30">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider min-w-[300px]">
                     Supervisor
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
@@ -225,7 +225,7 @@ const AnalyticsPage = () => {
               <tbody className="bg-gray-800 divide-y divide-gray-700">
                 {analytics?.supervisorMetrics?.map((supervisor) => (
                   <tr key={supervisor.name} className={supervisor.onLOA ? 'bg-orange-900' : ''}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-100">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-100 min-w-[300px]">
                       {supervisor.name}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-100">

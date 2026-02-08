@@ -30,7 +30,7 @@ export class SupervisorsService {
 
   async addSupervisor(name: string): Promise<Supervisor> {
     // Get current headers
-    const rows = await this.sheetsService.readRange(`${DISCUSSIONS_SHEET}!A1:Z1`);
+    const rows = await this.sheetsService.readRange(this.sheetsService.buildRange(DISCUSSIONS_SHEET, 'A1:Z1'));
     const headers = rows.length > 0 ? rows[0] : ['Date Posted', 'Topic', 'Link'];
     
     // Check if supervisor already exists
@@ -40,7 +40,7 @@ export class SupervisorsService {
 
     // Add new supervisor column
     headers.push(name);
-    await this.sheetsService.writeRange(`${DISCUSSIONS_SHEET}!A1:Z1`, [headers]);
+    await this.sheetsService.writeRange(this.sheetsService.buildRange(DISCUSSIONS_SHEET, 'A1:Z1'), [headers]);
 
     return {
       name,
@@ -50,7 +50,7 @@ export class SupervisorsService {
   }
 
   async removeSupervisor(name: string): Promise<void> {
-    const rows = await this.sheetsService.readRange(`${DISCUSSIONS_SHEET}!A:Z`);
+    const rows = await this.sheetsService.readRange(this.sheetsService.buildRange(DISCUSSIONS_SHEET, 'A:Z'));
     
     if (rows.length === 0) {
       throw new Error('No data found in discussions sheet');
@@ -70,13 +70,13 @@ export class SupervisorsService {
     });
 
     // Clear and rewrite
-    await this.sheetsService.clearRange(`${DISCUSSIONS_SHEET}!A:Z`);
-    await this.sheetsService.writeRange(`${DISCUSSIONS_SHEET}!A1:Z`, updatedRows);
+    await this.sheetsService.clearRange(this.sheetsService.buildRange(DISCUSSIONS_SHEET, 'A:Z'));
+    await this.sheetsService.writeRange(this.sheetsService.buildRange(DISCUSSIONS_SHEET, 'A1:Z'), updatedRows);
   }
 
   private async getLOARecords(): Promise<any[][]> {
     try {
-      return await this.sheetsService.readRange('LOA Tracking!A2:E');
+      return await this.sheetsService.readRange(this.sheetsService.buildRange('LOA Tracking', 'A2:E1000'));
     } catch (error) {
       // LOA sheet might not exist yet
       return [];

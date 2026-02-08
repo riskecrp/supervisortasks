@@ -32,8 +32,14 @@ export class AnalyticsService {
 
     const totalTasks = tasks.length;
     const completedTasks = tasks.filter(t => t.status === 'Completed').length;
-    const inProgressTasks = tasks.filter(t => t.status === 'In Progress').length;
-    const notStartedTasks = tasks.filter(t => t.status === 'Not Started').length;
+    const inProgressTasks = tasks.filter(t => 
+      t.status === 'Claimed' || 
+      t.status === 'Pending Reach Out' || 
+      t.status === 'Pending Meeting' || 
+      t.status === 'Pending Employee Reach Out' || 
+      t.status === 'Pending Discussion'
+    ).length;
+    const notStartedTasks = tasks.filter(t => t.status === 'Assigned').length;
 
     const totalSupervisors = supervisors.length;
     const activeSupervisors = supervisors.filter(s => !s.onLOA).length;

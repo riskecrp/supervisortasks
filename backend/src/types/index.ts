@@ -1,8 +1,10 @@
+import { TaskStatus } from '../constants/task-statuses';
+
 export interface Task {
   id: string;
   task: string;
   claimedBy: string;
-  status: 'Assigned' | 'Claimed' | 'Pending Reach Out' | 'Pending Meeting' | 'Pending Employee Reach Out' | 'Pending Discussion' | 'Completed';
+  status: TaskStatus;
   completedDate?: string;
   createdDate: string;
 }

@@ -36,15 +36,44 @@ export class SheetsService {
     this.sheets = google.sheets({ version: 'v4', auth });
   }
 
+  /**
+   * Formats a sheet name for use in A1 notation.
+   * Wraps sheet names containing spaces or special characters in single quotes.
+   */
+  private formatSheetName(sheetName: string): string {
+    // If the sheet name contains spaces or special characters, wrap it in single quotes
+    if (sheetName.includes(' ') || sheetName.includes("'") || sheetName.includes('!')) {
+      // Escape any single quotes in the sheet name by doubling them
+      const escapedName = sheetName.replace(/'/g, "''");
+      return `'${escapedName}'`;
+    }
+    return sheetName;
+  }
+
+  /**
+   * Builds a complete range string with proper A1 notation.
+   */
+  buildRange(sheetName: string, cellRange: string): string {
+    return `${this.formatSheetName(sheetName)}!${cellRange}`;
+  }
+
   async readRange(range: string): Promise<any[][]> {
     try {
+      console.log(`Reading range: ${range} from spreadsheet: ${this.spreadsheetId}`);
       const response = await this.sheets.spreadsheets.values.get({
         spreadsheetId: this.spreadsheetId,
         range,
       });
-      return response.data.values || [];
+      const values = response.data.values || [];
+      console.log(`Successfully read ${values.length} rows from range: ${range}`);
+      return values;
     } catch (error: any) {
       console.error(`Error reading range ${range}:`, error.message);
+      if (error.code === 404) {
+        console.error(`Sheet or range not found. Please verify the tab name and range are correct.`);
+      } else if (error.code === 403) {
+        console.error(`Permission denied. Please verify the service account has access to the spreadsheet.`);
+      }
       throw new Error(`Failed to read from Google Sheets: ${error.message}`);
     }
   }
