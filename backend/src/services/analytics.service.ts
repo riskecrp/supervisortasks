@@ -98,9 +98,6 @@ export class AnalyticsService {
     const startOfWeek = new Date(now);
     startOfWeek.setDate(now.getDate() - now.getDay());
 
-    // Get task history for completion metrics (as fallback)
-    const taskHistory = await this.tasksService.getTaskHistory();
-    
     // Group tasks by supervisor once to avoid repeated filtering
     const tasksBySupervisor = new Map<string, any[]>();
     tasks.forEach(task => {
@@ -112,53 +109,60 @@ export class AnalyticsService {
         tasksBySupervisor.get(owner)!.push(task);
       }
     });
-    
-    // Group task history by supervisor once
-    const historyBySupervisor = new Map<string, any[]>();
-    taskHistory.forEach(h => {
-      if (h.supervisor) {
-        if (!historyBySupervisor.has(h.supervisor)) {
-          historyBySupervisor.set(h.supervisor, []);
-        }
-        historyBySupervisor.get(h.supervisor)!.push(h);
-      }
-    });
 
     return supervisors.map(supervisor => {
-      // Count completed tasks directly from Tasks sheet where status = "Completed" and taskOwner exists
-      // This gives the most accurate current count of all completed tasks
+      // Get all tasks for this supervisor
       const supervisorTasks = tasksBySupervisor.get(supervisor.name) || [];
-      const completedTasksFromSheet = supervisorTasks.filter(
+      
+      // Filter to only completed tasks
+      const completedTasks = supervisorTasks.filter(
         t => t.normalizedStatus === 'completed'
       );
       
-      const totalCompleted = completedTasksFromSheet.length;
+      const totalCompleted = completedTasks.length;
       
-      // For time-based metrics (thisMonth, thisWeek) and average completion days,
-      // we use Task History which is populated when a task's status changes to "Completed"
-      // Note: There may be a brief delay between marking completed and history entry creation
-      // This means totalCompleted (from Tasks sheet) may be slightly higher than history counts
-      const completedTasksFromHistory = historyBySupervisor.get(supervisor.name) || [];
-      
-      const thisMonth = completedTasksFromHistory.filter(h => {
-        if (!h.completedDate) return false;
-        const completedDate = new Date(h.completedDate);
-        return completedDate >= startOfMonth;
+      // Calculate thisMonth: count completed tasks where claimedDate is in current month
+      const thisMonth = completedTasks.filter(task => {
+        if (!task.claimedDate) return false;
+        try {
+          const claimedDate = new Date(task.claimedDate);
+          return claimedDate >= startOfMonth;
+        } catch {
+          return false;
+        }
       }).length;
 
-      // Count tasks completed this week
-      const thisWeek = completedTasksFromHistory.filter(h => {
-        if (!h.completedDate) return false;
-        const completedDate = new Date(h.completedDate);
-        return completedDate >= startOfWeek;
+      // Calculate thisWeek: count completed tasks where claimedDate is in current week
+      const thisWeek = completedTasks.filter(task => {
+        if (!task.claimedDate) return false;
+        try {
+          const claimedDate = new Date(task.claimedDate);
+          return claimedDate >= startOfWeek;
+        } catch {
+          return false;
+        }
       }).length;
 
-      // Calculate average completion days from task history
-      // Uses history count as denominator since only history has duration data
-      const totalDays = completedTasksFromHistory.reduce((sum, h) => {
-        return sum + (h.durationDays || 0);
-      }, 0);
-      const averageCompletionDays = completedTasksFromHistory.length > 0 ? totalDays / completedTasksFromHistory.length : 0;
+      // Calculate averageCompletionDays: for each completed task, calculate days from claimedDate to today
+      const tasksWithValidDates = completedTasks.filter(task => {
+        if (!task.claimedDate) return false;
+        try {
+          new Date(task.claimedDate);
+          return true;
+        } catch {
+          return false;
+        }
+      });
+      
+      let averageCompletionDays = 0;
+      if (tasksWithValidDates.length > 0) {
+        const totalDays = tasksWithValidDates.reduce((sum, task) => {
+          const claimedDate = new Date(task.claimedDate);
+          const daysDiff = Math.floor((now.getTime() - claimedDate.getTime()) / (1000 * 60 * 60 * 24));
+          return sum + daysDiff;
+        }, 0);
+        averageCompletionDays = totalDays / tasksWithValidDates.length;
+      }
 
       return {
         name: supervisor.name,
