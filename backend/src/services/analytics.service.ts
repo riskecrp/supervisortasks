@@ -107,31 +107,30 @@ export class AnalyticsService {
       
       const totalCompleted = completedTasksFromSheet.length;
       
-      // Count tasks completed this month (using claimedDate as proxy since we don't have completion date in Tasks sheet)
-      // Note: This is an approximation. For accurate month/week counts, use task history if available
-      const tasksWithDates = completedTasksFromSheet.filter(t => t.claimedDate);
+      // For month/week metrics, we need to use task history since Tasks sheet doesn't track completion dates
+      // Note: If a task is marked completed but not in history yet, it won't be counted in these metrics
+      const completedTasksFromHistory = taskHistory.filter(
+        h => h.supervisor === supervisor.name
+      );
       
-      const thisMonth = tasksWithDates.filter(t => {
-        if (!t.claimedDate) return false;
-        const claimedDate = new Date(t.claimedDate);
-        return claimedDate >= startOfMonth;
+      const thisMonth = completedTasksFromHistory.filter(h => {
+        if (!h.completedDate) return false;
+        const completedDate = new Date(h.completedDate);
+        return completedDate >= startOfMonth;
       }).length;
 
       // Count tasks completed this week
-      const thisWeek = tasksWithDates.filter(t => {
-        if (!t.claimedDate) return false;
-        const claimedDate = new Date(t.claimedDate);
-        return claimedDate >= startOfWeek;
+      const thisWeek = completedTasksFromHistory.filter(h => {
+        if (!h.completedDate) return false;
+        const completedDate = new Date(h.completedDate);
+        return completedDate >= startOfWeek;
       }).length;
 
-      // Calculate average completion days from task history (if available)
-      const historyForSupervisor = taskHistory.filter(
-        h => h.supervisor === supervisor.name
-      );
-      const totalDays = historyForSupervisor.reduce((sum, h) => {
+      // Calculate average completion days from task history
+      const totalDays = completedTasksFromHistory.reduce((sum, h) => {
         return sum + (h.durationDays || 0);
       }, 0);
-      const averageCompletionDays = historyForSupervisor.length > 0 ? totalDays / historyForSupervisor.length : 0;
+      const averageCompletionDays = completedTasksFromHistory.length > 0 ? totalDays / completedTasksFromHistory.length : 0;
 
       return {
         name: supervisor.name,
