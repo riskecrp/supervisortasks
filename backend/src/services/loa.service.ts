@@ -12,7 +12,8 @@ export class LOAService {
 
   async getAllLOARecords(): Promise<LOARecord[]> {
     try {
-      const rows = await this.sheetsService.readRange(`${LOA_SHEET}!A2:E`);
+      const allRows = await this.sheetsService.readRange(`${LOA_SHEET}!A:E`);
+      const rows = allRows.slice(1); // Skip header row
       
       return rows.map((row, index) => ({
         id: `loa-${index + 2}`,

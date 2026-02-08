@@ -12,7 +12,8 @@ export class TasksService {
   }
 
   async getAllTasks(): Promise<Task[]> {
-    const rows = await this.sheetsService.readRange(`${TASKS_SHEET}!A2:E`);
+    const allRows = await this.sheetsService.readRange(`${TASKS_SHEET}!A:E`);
+    const rows = allRows.slice(1); // Skip header row
     
     // Filter out empty rows while tracking original row numbers
     const tasks: Task[] = [];
@@ -132,7 +133,8 @@ export class TasksService {
 
   async getTaskHistory(): Promise<any[]> {
     try {
-      const rows = await this.sheetsService.readRange(`${TASK_HISTORY_SHEET}!A2:D`);
+      const allRows = await this.sheetsService.readRange(`${TASK_HISTORY_SHEET}!A:D`);
+      const rows = allRows.slice(1); // Skip header row
       return rows.map((row, index) => ({
         id: `history-${index + 2}`,
         taskName: row[0] || '',
