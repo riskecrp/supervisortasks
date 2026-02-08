@@ -75,7 +75,6 @@ export class SheetsValidationService {
       }
 
       // Analyze sample data
-      const validStatuses = [...VALID_TASK_STATUSES];
       let invalidStatusCount = 0;
       let emptySupervisorCount = 0;
 
@@ -93,10 +92,10 @@ export class SheetsValidationService {
           }
 
           // Check status
-          if (status && !validStatuses.includes(status.toString())) {
+          if (status && !VALID_TASK_STATUSES.includes(status.toString() as any)) {
             invalidStatusCount++;
             if (idx < 3) { // Only log first few
-              issues.push(`Row ${idx + 2}: Invalid status "${status}" (valid options: ${validStatuses.join(', ')})`);
+              issues.push(`Row ${idx + 2}: Invalid status "${status}" (valid options: ${VALID_TASK_STATUSES.join(', ')})`);
             }
           }
         }
@@ -109,7 +108,7 @@ export class SheetsValidationService {
 
       if (invalidStatusCount > 0) {
         issues.push(`${invalidStatusCount} tasks have invalid status values`);
-        suggestions.push(`Ensure status values (column C) are one of: ${validStatuses.join(', ')}`);
+        suggestions.push(`Ensure status values (column C) are one of: ${VALID_TASK_STATUSES.join(', ')}`);
       }
 
       const valid = issues.length === 0;
