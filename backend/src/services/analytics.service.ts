@@ -30,9 +30,25 @@ export class AnalyticsService {
     ]);
 
     const totalTasks = tasks.length;
-    const completedTasks = tasks.filter(t => t.status === 'Completed').length;
-    const inProgressTasks = tasks.filter(t => t.status === 'In Progress').length;
-    const notStartedTasks = tasks.filter(t => t.status === 'Not Started').length;
+    
+    // Pre-process status values once
+    const tasksWithNormalizedStatus = tasks.map(t => ({
+      ...t,
+      normalizedStatus: t.status ? t.status.toString().trim().toLowerCase() : ''
+    }));
+    
+    const completedTasks = tasksWithNormalizedStatus.filter(t => 
+      t.normalizedStatus === 'completed'
+    ).length;
+    
+    // Count other statuses dynamically
+    const inProgressTasks = tasksWithNormalizedStatus.filter(t => 
+      t.normalizedStatus !== 'completed' && t.normalizedStatus !== ''
+    ).length;
+    
+    const notStartedTasks = tasksWithNormalizedStatus.filter(t => 
+      t.normalizedStatus === ''
+    ).length;
 
     const totalSupervisors = supervisors.length;
     const activeSupervisors = supervisors.filter(s => !s.onLOA).length;
@@ -40,7 +56,7 @@ export class AnalyticsService {
 
     const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
-    const supervisorMetrics = await this.calculateSupervisorMetrics(supervisors, tasks);
+    const supervisorMetrics = await this.calculateSupervisorMetrics(supervisors, tasksWithNormalizedStatus);
     
     // Calculate workload distribution
     const workloadDistribution = this.calculateWorkloadDistribution(supervisorMetrics);
@@ -82,36 +98,67 @@ export class AnalyticsService {
     const startOfWeek = new Date(now);
     startOfWeek.setDate(now.getDate() - now.getDay());
 
-    // Get task history for completion metrics
+    // Get task history for completion metrics (as fallback)
     const taskHistory = await this.tasksService.getTaskHistory();
+    
+    // Group tasks by supervisor once to avoid repeated filtering
+    const tasksBySupervisor = new Map<string, any[]>();
+    tasks.forEach(task => {
+      if (task.taskOwner && task.taskOwner.trim()) {
+        const owner = task.taskOwner.trim();
+        if (!tasksBySupervisor.has(owner)) {
+          tasksBySupervisor.set(owner, []);
+        }
+        tasksBySupervisor.get(owner)!.push(task);
+      }
+    });
+    
+    // Group task history by supervisor once
+    const historyBySupervisor = new Map<string, any[]>();
+    taskHistory.forEach(h => {
+      if (h.supervisor) {
+        if (!historyBySupervisor.has(h.supervisor)) {
+          historyBySupervisor.set(h.supervisor, []);
+        }
+        historyBySupervisor.get(h.supervisor)!.push(h);
+      }
+    });
 
     return supervisors.map(supervisor => {
-      // Get completed tasks from history
-      const completedTasks = taskHistory.filter(
-        h => h.supervisor === supervisor.name
+      // Count completed tasks directly from Tasks sheet where status = "Completed" and taskOwner exists
+      // This gives the most accurate current count of all completed tasks
+      const supervisorTasks = tasksBySupervisor.get(supervisor.name) || [];
+      const completedTasksFromSheet = supervisorTasks.filter(
+        t => t.normalizedStatus === 'completed'
       );
       
-      const totalCompleted = completedTasks.length;
+      const totalCompleted = completedTasksFromSheet.length;
       
-      // Count tasks completed this month
-      const thisMonth = completedTasks.filter(h => {
+      // For time-based metrics (thisMonth, thisWeek) and average completion days,
+      // we use Task History which is populated when a task's status changes to "Completed"
+      // Note: There may be a brief delay between marking completed and history entry creation
+      // This means totalCompleted (from Tasks sheet) may be slightly higher than history counts
+      const completedTasksFromHistory = historyBySupervisor.get(supervisor.name) || [];
+      
+      const thisMonth = completedTasksFromHistory.filter(h => {
         if (!h.completedDate) return false;
         const completedDate = new Date(h.completedDate);
         return completedDate >= startOfMonth;
       }).length;
 
       // Count tasks completed this week
-      const thisWeek = completedTasks.filter(h => {
+      const thisWeek = completedTasksFromHistory.filter(h => {
         if (!h.completedDate) return false;
         const completedDate = new Date(h.completedDate);
         return completedDate >= startOfWeek;
       }).length;
 
       // Calculate average completion days from task history
-      const totalDays = completedTasks.reduce((sum, h) => {
+      // Uses history count as denominator since only history has duration data
+      const totalDays = completedTasksFromHistory.reduce((sum, h) => {
         return sum + (h.durationDays || 0);
       }, 0);
-      const averageCompletionDays = totalCompleted > 0 ? totalDays / totalCompleted : 0;
+      const averageCompletionDays = completedTasksFromHistory.length > 0 ? totalDays / completedTasksFromHistory.length : 0;
 
       return {
         name: supervisor.name,

@@ -14,8 +14,14 @@ export class TasksService {
   async getAllTasks(): Promise<Task[]> {
     const rows = await this.sheetsService.readRange(`${TASKS_SHEET}!A2:F`);
     
+    // Track actual row numbers before filtering
+    const rowsWithIndex = rows.map((row, index) => ({
+      row,
+      actualRowNumber: index + 2 // +2 because sheets use 1-based indexing (not 0-based) and row 1 is the header
+    }));
+    
     // Filter out empty rows
-    const filteredRows = rows.filter(row => {
+    const filteredRows = rowsWithIndex.filter(({ row }) => {
       // Check if all values are empty/null/undefined
       const allEmpty = row.every(cell => !cell || cell.toString().trim() === '');
       // Check if the first column (task name) is empty
@@ -25,11 +31,11 @@ export class TasksService {
       return !allEmpty && !taskEmpty;
     });
     
-    return filteredRows.map((row, index) => ({
-      id: `task-${index + 2}`,
+    return filteredRows.map(({ row, actualRowNumber }) => ({
+      id: `task-${actualRowNumber}`,
       taskList: row[0] || '',
       taskOwner: row[1] || '',
-      status: (row[2] as any) || 'Not Started',
+      status: row[2]?.toString().trim() || 'Assigned',
       claimedDate: row[3] || '',
       dueDate: row[4] || '',
       notes: row[5] || '',
@@ -45,7 +51,7 @@ export class TasksService {
     const newRow = [
       task.taskList,
       task.taskOwner || '',
-      task.status || 'Not Started',
+      task.status || 'Assigned',
       task.claimedDate || new Date().toISOString().split('T')[0],
       task.dueDate || '',
       task.notes || '',
@@ -164,11 +170,27 @@ export class TasksService {
       
       // Return as array, or default statuses if none found
       const statusArray = Array.from(statuses);
-      return statusArray.length > 0 ? statusArray : ['Not Started', 'In Progress', 'Completed'];
+      return statusArray.length > 0 ? statusArray : [
+        'Assigned',
+        'Claimed',
+        'Pending Reach Out',
+        'Pending Meeting',
+        'Pending Employee Reach Out',
+        'Pending Discussion',
+        'Completed'
+      ];
     } catch (error) {
       console.error('Failed to get available statuses:', error);
       // Return default statuses on error
-      return ['Not Started', 'In Progress', 'Completed'];
+      return [
+        'Assigned',
+        'Claimed',
+        'Pending Reach Out',
+        'Pending Meeting',
+        'Pending Employee Reach Out',
+        'Pending Discussion',
+        'Completed'
+      ];
     }
   }
 }

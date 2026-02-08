@@ -11,8 +11,7 @@ const AnalyticsPage = () => {
   }
 
   const taskStatusData = [
-    { name: 'Not Started', value: analytics?.notStartedTasks || 0 },
-    { name: 'In Progress', value: analytics?.inProgressTasks || 0 },
+    { name: 'Assigned/In Progress', value: analytics?.inProgressTasks || 0 },
     { name: 'Completed', value: analytics?.completedTasks || 0 },
   ];
 
@@ -62,7 +61,7 @@ const AnalyticsPage = () => {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-sm font-medium text-gray-600">In Progress</p>
+              <p className="text-sm font-medium text-gray-600">Active/In Progress</p>
               <p className="text-4xl font-bold text-yellow-600 mt-2">
                 {analytics?.inProgressTasks || 0}
               </p>

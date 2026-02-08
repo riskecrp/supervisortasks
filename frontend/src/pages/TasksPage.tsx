@@ -27,7 +27,7 @@ const TasksPage = () => {
   const [formData, setFormData] = useState({
     taskList: '',
     taskOwner: '',
-    status: 'Not Started',
+    status: 'Assigned',
     claimedDate: '',
     dueDate: '',
     notes: '',
@@ -36,7 +36,7 @@ const TasksPage = () => {
   const activeSupervisors = supervisors?.filter(s => s.active) || [];
   const statuses = (availableStatuses && availableStatuses.length > 0) 
     ? availableStatuses 
-    : ['Not Started', 'In Progress', 'Completed'];
+    : ['Assigned', 'Claimed', 'Pending Reach Out', 'Pending Meeting', 'Pending Employee Reach Out', 'Pending Discussion', 'Completed'];
 
   const filteredTasks = tasks?.filter(task => {
     const matchesStatus = statusFilter === 'all' || task.status === statusFilter;
@@ -61,7 +61,7 @@ const TasksPage = () => {
       setFormData({
         taskList: '',
         taskOwner: activeSupervisors[0]?.name || '',
-        status: statuses[0] || 'Not Started',
+        status: statuses[0] || 'Assigned',
         claimedDate: new Date().toISOString().split('T')[0],
         dueDate: '',
         notes: '',
@@ -76,7 +76,7 @@ const TasksPage = () => {
     setFormData({ 
       taskList: '', 
       taskOwner: '', 
-      status: statuses[0] || 'Not Started',
+      status: statuses[0] || 'Assigned',
       claimedDate: '',
       dueDate: '',
       notes: '',
@@ -164,7 +164,7 @@ const TasksPage = () => {
         </label>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 w-full">
         <div className="px-6 py-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900">Task List</h3>
@@ -191,7 +191,7 @@ const TasksPage = () => {
             </div>
           </div>
         </div>
-        <div>
+        <div className="w-full">
           <Table>
             <TableHeader>
               <TableRow>
