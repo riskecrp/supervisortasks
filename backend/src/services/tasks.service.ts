@@ -2,7 +2,7 @@ import { SheetsService } from './sheets.service';
 import { Task } from '../types';
 
 const TASKS_SHEET = 'Tasks';
-const TASK_HISTORY_SHEET = "'Task History'";
+const TASK_HISTORY_SHEET = 'Task History';
 
 export class TasksService {
   private sheetsService: SheetsService;
@@ -12,7 +12,7 @@ export class TasksService {
   }
 
   async getAllTasks(): Promise<Task[]> {
-    const rows = await this.sheetsService.readRange(`${TASKS_SHEET}!A2:E`);
+    const rows = await this.sheetsService.readRange(this.sheetsService.buildRange(TASKS_SHEET, 'A2:E'));
     
     // Filter out empty rows while tracking original row numbers
     const tasks: Task[] = [];
@@ -53,7 +53,7 @@ export class TasksService {
       createdDate,
     ];
 
-    await this.sheetsService.appendRange(`${TASKS_SHEET}!A:E`, [newRow]);
+    await this.sheetsService.appendRange(this.sheetsService.buildRange(TASKS_SHEET, 'A:E'), [newRow]);
     
     const tasks = await this.getAllTasks();
     return tasks[tasks.length - 1];
@@ -85,7 +85,7 @@ export class TasksService {
       updatedTask.createdDate,
     ];
 
-    await this.sheetsService.writeRange(`${TASKS_SHEET}!A${rowNumber}:E${rowNumber}`, [updatedRow]);
+    await this.sheetsService.writeRange(this.sheetsService.buildRange(TASKS_SHEET, `A${rowNumber}:E${rowNumber}`), [updatedRow]);
     
     return updatedTask;
   }
@@ -94,15 +94,15 @@ export class TasksService {
     const rowNumber = parseInt(id.split('-')[1]);
     
     // Read all data
-    const allRows = await this.sheetsService.readRange(`${TASKS_SHEET}!A:E`);
+    const allRows = await this.sheetsService.readRange(this.sheetsService.buildRange(TASKS_SHEET, 'A:E'));
     
     // Remove the specific row (accounting for 0-based index)
     allRows.splice(rowNumber - 1, 1);
     
     // Clear and rewrite
-    await this.sheetsService.clearRange(`${TASKS_SHEET}!A2:E`);
+    await this.sheetsService.clearRange(this.sheetsService.buildRange(TASKS_SHEET, 'A2:E'));
     if (allRows.length > 1) {
-      await this.sheetsService.writeRange(`${TASKS_SHEET}!A2:E`, allRows.slice(1));
+      await this.sheetsService.writeRange(this.sheetsService.buildRange(TASKS_SHEET, 'A2:E'), allRows.slice(1));
     }
   }
 
@@ -123,7 +123,7 @@ export class TasksService {
     ];
 
     try {
-      await this.sheetsService.appendRange(`${TASK_HISTORY_SHEET}!A:D`, [historyRow]);
+      await this.sheetsService.appendRange(this.sheetsService.buildRange(TASK_HISTORY_SHEET, 'A:D'), [historyRow]);
     } catch (error) {
       console.error('Failed to add to task history:', error);
       // Don't fail the main operation if history update fails
@@ -132,7 +132,7 @@ export class TasksService {
 
   async getTaskHistory(): Promise<any[]> {
     try {
-      const rows = await this.sheetsService.readRange(`${TASK_HISTORY_SHEET}!A2:D`);
+      const rows = await this.sheetsService.readRange(this.sheetsService.buildRange(TASK_HISTORY_SHEET, 'A2:D'));
       return rows.map((row, index) => ({
         id: `history-${index + 2}`,
         taskName: row[0] || '',
