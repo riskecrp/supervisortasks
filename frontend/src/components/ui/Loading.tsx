@@ -15,7 +15,7 @@ export const Loading = ({ size = 'md', className }: LoadingProps) => {
 
   return (
     <div className={cn('flex items-center justify-center', className)}>
-      <Loader2 className={cn('animate-spin text-blue-600', sizes[size])} />
+      <Loader2 className={cn('animate-spin text-blue-400', sizes[size])} />
     </div>
   );
 };
@@ -25,7 +25,7 @@ export const LoadingScreen = () => {
     <div className="flex items-center justify-center min-h-screen">
       <div className="text-center">
         <Loading size="lg" />
-        <p className="mt-4 text-gray-600">Loading...</p>
+        <p className="mt-4 text-gray-400">Loading...</p>
       </div>
     </div>
   );

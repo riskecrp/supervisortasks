@@ -75,8 +75,8 @@ const DiscussionsPage = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Discussions</h1>
-          <p className="text-gray-600 mt-2">Track supervisor feedback on discussions</p>
+          <h1 className="text-3xl font-bold text-gray-100">Discussions</h1>
+          <p className="text-gray-400 mt-2">Track supervisor feedback on discussions</p>
         </div>
         <Button onClick={handleOpenModal}>
           <Plus className="w-4 h-4 mr-2" />
@@ -89,7 +89,7 @@ const DiscussionsPage = () => {
           <CardTitle>Discussion Feedback Tracker</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto min-h-[600px]">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -107,7 +107,7 @@ const DiscussionsPage = () => {
               <TableBody>
                 {!discussions || discussions.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={activeSupervisors.length + 4} className="text-center text-gray-500 py-8">
+                    <TableCell colSpan={activeSupervisors.length + 4} className="text-center text-gray-400 py-8">
                       No discussions found
                     </TableCell>
                   </TableRow>
@@ -125,7 +125,7 @@ const DiscussionsPage = () => {
                           href={discussion.link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 inline-flex items-center"
+                          className="text-blue-400 hover:text-blue-300 inline-flex items-center"
                         >
                           <ExternalLink className="w-4 h-4" />
                         </a>
@@ -138,8 +138,8 @@ const DiscussionsPage = () => {
                               onClick={() => handleToggleFeedback(discussion.id, sup.name, hasResponded)}
                               className={`w-6 h-6 rounded border-2 transition-colors ${
                                 hasResponded
-                                  ? 'bg-green-500 border-green-600'
-                                  : 'bg-white border-gray-300 hover:border-gray-400'
+                                  ? 'bg-green-600 border-green-700'
+                                  : 'bg-gray-700 border-gray-600 hover:border-gray-500'
                               }`}
                             >
                               {hasResponded && (
@@ -167,7 +167,7 @@ const DiscussionsPage = () => {
                           size="sm"
                           onClick={() => handleDelete(discussion.id)}
                         >
-                          <Trash2 className="w-4 h-4 text-red-600" />
+                          <Trash2 className="w-4 h-4 text-red-400" />
                         </Button>
                       </TableCell>
                     </TableRow>

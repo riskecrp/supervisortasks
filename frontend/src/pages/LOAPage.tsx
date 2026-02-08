@@ -89,8 +89,8 @@ const LOAPage = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Leave of Absence</h1>
-          <p className="text-gray-600 mt-2">Track supervisor leave periods</p>
+          <h1 className="text-3xl font-bold text-gray-100">Leave of Absence</h1>
+          <p className="text-gray-400 mt-2">Track supervisor leave periods</p>
         </div>
         <Button onClick={() => handleOpenModal()}>
           <Plus className="w-4 h-4 mr-2" />
@@ -102,8 +102,8 @@ const LOAPage = () => {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-sm font-medium text-gray-600">Currently On Leave</p>
-              <p className="text-4xl font-bold text-orange-600 mt-2">
+              <p className="text-sm font-medium text-gray-400">Currently On Leave</p>
+              <p className="text-4xl font-bold text-orange-400 mt-2">
                 {activeRecords?.length || 0}
               </p>
             </div>
@@ -112,8 +112,8 @@ const LOAPage = () => {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-sm font-medium text-gray-600">Total LOA Records</p>
-              <p className="text-4xl font-bold text-gray-900 mt-2">
+              <p className="text-sm font-medium text-gray-400">Total LOA Records</p>
+              <p className="text-4xl font-bold text-gray-100 mt-2">
                 {loaRecords?.length || 0}
               </p>
             </div>
@@ -140,7 +140,7 @@ const LOAPage = () => {
             <TableBody>
               {sortedRecords.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-gray-500 py-8">
+                  <TableCell colSpan={6} className="text-center text-gray-400 py-8">
                     No LOA records found
                   </TableCell>
                 </TableRow>
@@ -174,7 +174,7 @@ const LOAPage = () => {
                           size="sm"
                           onClick={() => handleDelete(record.id)}
                         >
-                          <Trash2 className="w-4 h-4 text-red-600" />
+                          <Trash2 className="w-4 h-4 text-red-400" />
                         </Button>
                       </div>
                     </TableCell>

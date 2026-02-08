@@ -34,16 +34,16 @@ const AnalyticsPage = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Analytics</h1>
-        <p className="text-gray-600 mt-2">Performance metrics and insights</p>
+        <h1 className="text-3xl font-bold text-gray-100">Analytics</h1>
+        <p className="text-gray-400 mt-2">Performance metrics and insights</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-sm font-medium text-gray-600">Total Tasks</p>
-              <p className="text-4xl font-bold text-blue-600 mt-2">
+              <p className="text-sm font-medium text-gray-400">Total Tasks</p>
+              <p className="text-4xl font-bold text-blue-400 mt-2">
                 {analytics?.totalTasks || 0}
               </p>
             </div>
@@ -52,8 +52,8 @@ const AnalyticsPage = () => {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-sm font-medium text-gray-600">Completed</p>
-              <p className="text-4xl font-bold text-green-600 mt-2">
+              <p className="text-sm font-medium text-gray-400">Completed</p>
+              <p className="text-4xl font-bold text-green-400 mt-2">
                 {analytics?.completedTasks || 0}
               </p>
             </div>
@@ -62,8 +62,8 @@ const AnalyticsPage = () => {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-sm font-medium text-gray-600">In Progress</p>
-              <p className="text-4xl font-bold text-yellow-600 mt-2">
+              <p className="text-sm font-medium text-gray-400">In Progress</p>
+              <p className="text-4xl font-bold text-yellow-400 mt-2">
                 {analytics?.inProgressTasks || 0}
               </p>
             </div>
@@ -72,8 +72,8 @@ const AnalyticsPage = () => {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-sm font-medium text-gray-600">Completion Rate</p>
-              <p className="text-4xl font-bold text-purple-600 mt-2">
+              <p className="text-sm font-medium text-gray-400">Completion Rate</p>
+              <p className="text-4xl font-bold text-purple-400 mt-2">
                 {analytics?.completionRate?.toFixed(1)}%
               </p>
             </div>
@@ -199,54 +199,54 @@ const AnalyticsPage = () => {
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-gray-700">
+              <thead className="bg-gray-900/30">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                     Supervisor
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                     Total Completed
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                     This Month
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                     This Week
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                     Avg. Days to Complete
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                     Status
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-gray-800 divide-y divide-gray-700">
                 {analytics?.supervisorMetrics?.map((supervisor) => (
-                  <tr key={supervisor.name} className={supervisor.onLOA ? 'bg-orange-50' : ''}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <tr key={supervisor.name} className={supervisor.onLOA ? 'bg-orange-900' : ''}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-100">
                       {supervisor.name}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-100">
                       {supervisor.totalCompleted}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-100">
                       {supervisor.thisMonth}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-100">
                       {supervisor.thisWeek}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-100">
                       {supervisor.averageCompletionDays.toFixed(1)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       {supervisor.onLOA ? (
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-100 text-orange-800">
+                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-900 text-orange-200">
                           On LOA
                         </span>
                       ) : (
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-900 text-green-200">
                           Active
                         </span>
                       )}

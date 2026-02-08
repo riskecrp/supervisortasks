@@ -50,8 +50,8 @@ const SupervisorsPage = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Supervisors</h1>
-          <p className="text-gray-600 mt-2">Manage supervisor roster</p>
+          <h1 className="text-3xl font-bold text-gray-100">Supervisors</h1>
+          <p className="text-gray-400 mt-2">Manage supervisor roster</p>
         </div>
         <Button onClick={handleOpenModal}>
           <Plus className="w-4 h-4 mr-2" />
@@ -63,8 +63,8 @@ const SupervisorsPage = () => {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-sm font-medium text-gray-600">Total Supervisors</p>
-              <p className="text-4xl font-bold text-gray-900 mt-2">
+              <p className="text-sm font-medium text-gray-400">Total Supervisors</p>
+              <p className="text-4xl font-bold text-gray-100 mt-2">
                 {supervisors?.length || 0}
               </p>
             </div>
@@ -73,8 +73,8 @@ const SupervisorsPage = () => {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-sm font-medium text-gray-600">Active</p>
-              <p className="text-4xl font-bold text-green-600 mt-2">
+              <p className="text-sm font-medium text-gray-400">Active</p>
+              <p className="text-4xl font-bold text-green-400 mt-2">
                 {activeSupervisors.length}
               </p>
             </div>
@@ -83,8 +83,8 @@ const SupervisorsPage = () => {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-sm font-medium text-gray-600">On Leave</p>
-              <p className="text-4xl font-bold text-orange-600 mt-2">
+              <p className="text-sm font-medium text-gray-400">On Leave</p>
+              <p className="text-4xl font-bold text-orange-400 mt-2">
                 {activeSupervisors.filter(s => s.onLOA).length}
               </p>
             </div>
@@ -108,7 +108,7 @@ const SupervisorsPage = () => {
             <TableBody>
               {activeSupervisors.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center text-gray-500 py-8">
+                  <TableCell colSpan={3} className="text-center text-gray-400 py-8">
                     No active supervisors
                   </TableCell>
                 </TableRow>
@@ -129,7 +129,7 @@ const SupervisorsPage = () => {
                         size="sm"
                         onClick={() => handleRemove(supervisor.name)}
                       >
-                        <UserX className="w-4 h-4 text-red-600" />
+                        <UserX className="w-4 h-4 text-red-400" />
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -156,7 +156,7 @@ const SupervisorsPage = () => {
               <TableBody>
                 {inactiveSupervisors.map((supervisor) => (
                   <TableRow key={supervisor.name}>
-                    <TableCell className="font-medium text-gray-500">
+                    <TableCell className="font-medium text-gray-400">
                       {supervisor.name}
                     </TableCell>
                     <TableCell>
