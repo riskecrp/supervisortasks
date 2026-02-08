@@ -1,4 +1,5 @@
 import { SheetsService } from './sheets.service';
+import { VALID_TASK_STATUSES } from '../constants/task-statuses';
 
 /**
  * Utility to inspect and validate the Google Sheets structure
@@ -74,7 +75,7 @@ export class SheetsValidationService {
       }
 
       // Analyze sample data
-      const validStatuses = ['Assigned', 'Claimed', 'Pending Reach Out', 'Pending Meeting', 'Pending Employee Reach Out', 'Pending Discussion', 'Completed'];
+      const validStatuses = [...VALID_TASK_STATUSES];
       let invalidStatusCount = 0;
       let emptySupervisorCount = 0;
 

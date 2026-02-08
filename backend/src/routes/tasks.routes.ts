@@ -3,15 +3,13 @@ import { TasksService } from '../services/tasks.service';
 import { SheetsValidationService } from '../services/sheets-validation.service';
 import { SheetsService } from '../services/sheets.service';
 
-export function createTasksRouter(tasksService: TasksService, sheetsService?: SheetsService): Router {
+export function createTasksRouter(tasksService: TasksService, sheetsService: SheetsService): Router {
   const router = Router();
 
   // Validate sheet structure - helpful for debugging
   router.get('/validate', async (req: Request, res: Response) => {
     try {
-      // Use provided sheetsService or create new one if not provided (for backwards compatibility)
-      const service = sheetsService || new SheetsService();
-      const validationService = new SheetsValidationService(service);
+      const validationService = new SheetsValidationService(sheetsService);
       const result = await validationService.validateTasksSheet();
       res.json(result);
     } catch (error: any) {
@@ -23,9 +21,7 @@ export function createTasksRouter(tasksService: TasksService, sheetsService?: Sh
   // Get sheet summary - helpful for debugging
   router.get('/sheet-summary', async (req: Request, res: Response) => {
     try {
-      // Use provided sheetsService or create new one if not provided (for backwards compatibility)
-      const service = sheetsService || new SheetsService();
-      const validationService = new SheetsValidationService(service);
+      const validationService = new SheetsValidationService(sheetsService);
       const summary = await validationService.getTasksSummary();
       res.type('text/plain').send(summary);
     } catch (error: any) {

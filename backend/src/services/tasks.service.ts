@@ -1,5 +1,6 @@
 import { SheetsService } from './sheets.service';
 import { Task } from '../types';
+import { getValidTaskStatus } from '../constants/task-statuses';
 
 const TASKS_SHEET = 'Tasks';
 const TASK_HISTORY_SHEET = 'Task History';
@@ -38,7 +39,7 @@ export class TasksService {
             id: `task-${index + 2}`, // Use original row number (index + 2 because A2 is row 2)
             task: row[0] || '',
             claimedBy: row[1] || '',
-            status: (row[2] as any) || 'Not Started',
+            status: getValidTaskStatus(row[2], 'Assigned'),
             completedDate: row[3] || '',
             createdDate: row[4] || new Date().toISOString().split('T')[0],
           };
