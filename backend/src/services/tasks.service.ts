@@ -12,30 +12,57 @@ export class TasksService {
   }
 
   async getAllTasks(): Promise<Task[]> {
-    const rows = await this.sheetsService.readRange(this.sheetsService.buildRange(TASKS_SHEET, 'A2:E1000'));
-    
-    // Filter out empty rows while tracking original row numbers
-    const tasks: Task[] = [];
-    rows.forEach((row, index) => {
-      // Check if all values are empty/null/undefined
-      const allEmpty = row.every(cell => !cell || cell.toString().trim() === '');
-      // Check if the first column (task name) is empty
-      const taskEmpty = !row[0] || row[0].toString().trim() === '';
+    try {
+      const range = this.sheetsService.buildRange(TASKS_SHEET, 'A2:E1000');
+      console.log(`Reading tasks from range: ${range}`);
       
-      // Only include row if it's not completely empty AND has a task name
-      if (!allEmpty && !taskEmpty) {
-        tasks.push({
-          id: `task-${index + 2}`, // Use original row number (index + 2 because A2 is row 2)
-          task: row[0] || '',
-          claimedBy: row[1] || '',
-          status: (row[2] as any) || 'Not Started',
-          completedDate: row[3] || '',
-          createdDate: row[4] || new Date().toISOString().split('T')[0],
-        });
+      const rows = await this.sheetsService.readRange(range);
+      console.log(`Retrieved ${rows.length} rows from Google Sheets`);
+      
+      if (rows.length === 0) {
+        console.warn('No data found in Tasks sheet. Please check that the sheet contains data starting from row 2.');
+        return [];
       }
-    });
-    
-    return tasks;
+      
+      // Filter out empty rows while tracking original row numbers
+      const tasks: Task[] = [];
+      rows.forEach((row, index) => {
+        // Check if all values are empty/null/undefined
+        const allEmpty = row.every(cell => !cell || cell.toString().trim() === '');
+        // Check if the first column (task name) is empty
+        const taskEmpty = !row[0] || row[0].toString().trim() === '';
+        
+        // Only include row if it's not completely empty AND has a task name
+        if (!allEmpty && !taskEmpty) {
+          const task: Task = {
+            id: `task-${index + 2}`, // Use original row number (index + 2 because A2 is row 2)
+            task: row[0] || '',
+            claimedBy: row[1] || '',
+            status: (row[2] as any) || 'Not Started',
+            completedDate: row[3] || '',
+            createdDate: row[4] || new Date().toISOString().split('T')[0],
+          };
+          
+          // Log first few tasks for debugging
+          if (tasks.length < 3) {
+            console.log(`Task ${index + 2}:`, JSON.stringify(task, null, 2));
+          }
+          
+          tasks.push(task);
+        }
+      });
+      
+      console.log(`Returning ${tasks.length} valid tasks after filtering empty rows`);
+      return tasks;
+    } catch (error: any) {
+      console.error('Error reading tasks from Google Sheets:', error.message);
+      console.error('Please verify:');
+      console.error('1. The Google Sheets API credentials are properly configured');
+      console.error('2. The sheet has a tab named "Tasks"');
+      console.error('3. The service account has access to the spreadsheet');
+      console.error('4. The sheet has the correct column structure: A=Task, B=Claimed By, C=Status, D=Completed Date, E=Created Date');
+      throw error;
+    }
   }
 
   async getTask(id: string): Promise<Task | null> {
