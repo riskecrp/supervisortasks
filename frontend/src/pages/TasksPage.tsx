@@ -6,7 +6,6 @@ import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/Table';
 import { Modal } from '../components/ui/Modal';
-import { Badge } from '../components/ui/Badge';
 import { Loading } from '../components/ui/Loading';
 import { useTasks, useCreateTask, useUpdateTask, useDeleteTask } from '../hooks/useTasks';
 import { useSupervisors } from '../hooks/useSupervisors';
@@ -124,19 +123,6 @@ const TasksPage = () => {
     } catch (error) {
       toast.error('Failed to update task status');
     }
-  };
-
-  const getStatusBadge = (status: Task['status']) => {
-    const variantMap: Record<Task['status'], 'default' | 'warning' | 'success' | 'info' | 'danger'> = {
-      'Assigned': 'default',
-      'Claimed': 'info',
-      'Pending Reach Out': 'warning',
-      'Pending Meeting': 'warning',
-      'Pending Employee Reach Out': 'warning',
-      'Pending Discussion': 'warning',
-      'Completed': 'success',
-    };
-    return <Badge variant={variantMap[status]}>{status}</Badge>;
   };
 
   if (isLoading) {
