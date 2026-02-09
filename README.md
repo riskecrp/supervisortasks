@@ -25,6 +25,24 @@ A modern web dashboard for managing supervisor tasks, discussions, feedback, and
 - (Future) Google Cloud Project with Sheets API enabled
 - (Future) Service account credentials for Google Sheets API
 
+## Testing Without Backend
+
+**The application works without a backend!** It automatically falls back to mock data for testing and development.
+
+```bash
+# Quick test - no backend required
+npm install
+npm run dev
+# Open http://localhost:3000 - works immediately with mock data!
+```
+
+**For comprehensive testing guide**, see **[TESTING.md](TESTING.md)** for:
+- How to test without backend
+- Mock data usage
+- Environment configuration
+- Testing different scenarios
+- Troubleshooting tips
+
 ## Setup Instructions
 
 ### Quick Start (With Railway Backend)
