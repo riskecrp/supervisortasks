@@ -13,8 +13,6 @@ COPY frontend ./frontend
 
 # Build the application
 WORKDIR /app/frontend
-# Set experimental worker pool to 1 to avoid Next.js 16.1.6 Docker build bug
-ENV NEXT_BUILD_WORKER_POOL=1
 RUN npx next build
 
 # Production stage
