@@ -14,8 +14,8 @@ export class LOAService {
     const rows = await this.readTaskRotation();
     return rows
       .map((row, index) => {
-        const supervisorName = row[0] || '';
-        const loaFlag = row[2] === 'TRUE' || row[2] === true;
+        const supervisorName = (row[0] || '').toString().trim();
+        const loaFlag = String(row[2] ?? '').toUpperCase() === 'TRUE' || row[2] === true;
         const startDate = row[3] || '';
         const endDate = row[4] || '';
         if (!supervisorName || !loaFlag) return null;
@@ -119,6 +119,8 @@ export class LOAService {
     data: { loa: boolean; startDate: string; endDate: string }
   ): Promise<void> {
     try {
+      const normalizedName = supervisorName.trim();
+
       // Read all rows including header
       let rows: any[][] = [];
       try {
@@ -136,27 +138,21 @@ export class LOAService {
       }
 
       const bodyRows = rows.slice(1);
-      let targetIndex = bodyRows.findIndex(row => (row[0] || '').toString().trim() === supervisorName);
+      const targetIndex = bodyRows.findIndex(
+        row => (row[0] || '').toString().trim() === normalizedName
+      );
 
-      // If supervisor missing, append new row
       if (targetIndex === -1) {
-        const newRow = [supervisorName, '', data.loa ? 'TRUE' : 'FALSE', data.startDate, data.endDate];
-        await this.sheetsService.appendRange(`${TASK_ROTATION_SHEET}!A:E`, [newRow]);
-        return;
+        throw new Error(
+          `Supervisor "${normalizedName}" not found in Task Rotation sheet. Verify the name exists in column A.`
+        );
       }
 
-      // Update existing row
       const rowNumber = targetIndex + 2; // account for header
-      const row = bodyRows[targetIndex];
-      const updatedRow = [
-        row[0] || supervisorName,
-        row[1] || '',
-        data.loa ? 'TRUE' : 'FALSE',
-        data.startDate || '',
-        data.endDate || '',
-      ];
-
-      await this.sheetsService.writeRange(`${TASK_ROTATION_SHEET}!A${rowNumber}:E${rowNumber}`, [updatedRow]);
+      await this.sheetsService.writeRange(
+        `${TASK_ROTATION_SHEET}!C${rowNumber}:E${rowNumber}`,
+        [[data.loa ? 'TRUE' : 'FALSE', data.startDate || '', data.endDate || '']]
+      );
     } catch (error: any) {
       console.error('Failed to update Task Rotation LOA data:', error.message);
       throw new Error(`Failed to update LOA status: ${error.message}`);
