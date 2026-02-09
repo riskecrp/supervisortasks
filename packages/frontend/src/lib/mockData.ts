@@ -58,8 +58,8 @@ export const mockDiscussions: Discussion[] = [
     id: '1',
     datePosted: '2026-02-08',
     topic: 'New policy implementation strategy',
-    directLink: 'https://example.com/discussion/1',
-    supervisorResponses: {
+    link: 'https://example.com/discussion/1',
+    supervisorFeedback: {
       'John Smith': true,
       'Sarah Johnson': false,
       'Mike Davis': true,
@@ -69,8 +69,8 @@ export const mockDiscussions: Discussion[] = [
     id: '2',
     datePosted: '2026-02-07',
     topic: 'Q1 Performance metrics review',
-    directLink: 'https://example.com/discussion/2',
-    supervisorResponses: {
+    link: 'https://example.com/discussion/2',
+    supervisorFeedback: {
       'John Smith': false,
       'Sarah Johnson': true,
       'Mike Davis': false,
@@ -80,8 +80,8 @@ export const mockDiscussions: Discussion[] = [
     id: '3',
     datePosted: '2026-02-06',
     topic: 'Remote work policy updates',
-    directLink: 'https://example.com/discussion/3',
-    supervisorResponses: {
+    link: 'https://example.com/discussion/3',
+    supervisorFeedback: {
       'John Smith': true,
       'Sarah Johnson': true,
       'Mike Davis': true,

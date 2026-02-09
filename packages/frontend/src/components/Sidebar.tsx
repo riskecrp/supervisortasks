@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ClipboardList, MessageSquare, Users } from 'lucide-react';
+import { ClipboardList, MessageSquare, Users, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navigation = [
   { name: 'Tasks', href: '/', icon: ClipboardList },
   { name: 'Discussions', href: '/discussions', icon: MessageSquare },
   { name: 'Supervisors', href: '/supervisors', icon: Users },
+  { name: 'LOA', href: '/loa', icon: Calendar },
 ];
 
 export default function Sidebar() {

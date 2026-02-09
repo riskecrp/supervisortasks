@@ -13,8 +13,8 @@ export interface Discussion {
   id: string;
   datePosted: string;
   topic: string;
-  directLink: string;
-  supervisorResponses: Record<string, boolean>;
+  link: string;
+  supervisorFeedback: Record<string, boolean>;
 }
 
 export interface Supervisor {
@@ -23,4 +23,13 @@ export interface Supervisor {
   isOnLOA: boolean;
   loaStartDate: string | null;
   loaEndDate: string | null;
+}
+
+export interface LOARecord {
+  id: string;
+  supervisorName: string;
+  startDate: string;
+  endDate: string;
+  reason: string;
+  status: 'Active' | 'Completed';
 }
