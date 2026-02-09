@@ -75,7 +75,7 @@ export class SupervisorsService {
       const existingSupervisors = new Set(existingRows.slice(1).map(row => row[0] ? row[0].toString().trim() : '').filter(Boolean));
       
       // Add any missing supervisors
-      const missingNames = supervisorNames.filter(name => !existingSupervisors.has(name));
+      const missingNames = supervisorNames.filter(name => !existingSupervisors.has(name.trim()));
       
       if (missingNames.length > 0) {
         const newRows = missingNames.map(name => [name, '', 'FALSE', '', '']);

@@ -83,11 +83,11 @@ const DiscussionsPage = () => {
         </Button>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md border border-gray-200 w-full min-h-[600px] p-6">
-        <div className="pb-4 border-b border-gray-200 mb-4">
+      <div className="bg-white rounded-lg shadow-md border border-gray-200 w-full min-h-[600px]">
+        <div className="px-6 py-4 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900">Discussion Feedback Tracker</h3>
         </div>
-        <div className="w-full overflow-x-auto">
+        <div className="w-full overflow-x-auto px-6 pb-6">
           <Table>
               <TableHeader>
                 <TableRow>
