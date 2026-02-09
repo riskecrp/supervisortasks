@@ -5,6 +5,15 @@ import { SheetAccessError } from '../services/sheets.service';
 export function createLOARouter(loaService: LOAService): Router {
   const router = Router();
   const isSheetAccessError = (error: any) => error instanceof SheetAccessError;
+  const handleSheetError = (res: Response, error: any, fallbackMessage: string) => {
+    if (isSheetAccessError(error)) {
+      return res.status(503).json({
+        error: 'LOA data temporarily unavailable',
+        details: error?.message || '',
+      });
+    }
+    return res.status(500).json({ error: error?.message || fallbackMessage });
+  };
 
   // Get all LOA records
   router.get('/', async (req: Request, res: Response) => {
@@ -13,15 +22,7 @@ export function createLOARouter(loaService: LOAService): Router {
       res.json(records);
     } catch (error: any) {
       console.error('Error getting LOA records:', error);
-      const message = error?.message || '';
-      if (isSheetAccessError(error)) {
-        return res.status(503).json({
-          error: 'LOA data temporarily unavailable',
-          details: message,
-        });
-      }
-      
-      res.status(500).json({ error: message || 'Failed to fetch LOA records' });
+      handleSheetError(res, error, 'Failed to fetch LOA records');
     }
   });
 
@@ -32,15 +33,7 @@ export function createLOARouter(loaService: LOAService): Router {
       res.json(records);
     } catch (error: any) {
       console.error('Error getting active LOA records:', error);
-      const message = error?.message || '';
-      if (isSheetAccessError(error)) {
-        return res.status(503).json({
-          error: 'LOA data temporarily unavailable',
-          details: message,
-        });
-      }
-      
-      res.status(500).json({ error: message || 'Failed to fetch active LOA records' });
+      handleSheetError(res, error, 'Failed to fetch active LOA records');
     }
   });
 
