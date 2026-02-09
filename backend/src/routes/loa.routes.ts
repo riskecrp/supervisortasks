@@ -10,7 +10,6 @@ export function createLOARouter(loaService: LOAService): Router {
         error: 'LOA data temporarily unavailable',
         details: error.message || '',
       });
-      return;
     }
     res.status(500).json({ error: error?.message || fallbackMessage });
   };
