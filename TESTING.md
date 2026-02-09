@@ -298,7 +298,7 @@ export const mockTasks: Task[] = [
     taskList: 'Test overdue task',
     taskOwner: 'Test User',
     status: 'In Progress',
-    dueDate: '2020-01-01', // Past date for overdue testing
+    dueDate: '2020-01-01', // Use any past date to test overdue highlighting
     // ...
   },
   // Add more test cases
