@@ -217,14 +217,16 @@ docker-compose down
 
 1. Push your code to GitHub
 2. Import repository in Vercel
-3. Configure:
-   - **Root Directory**: Leave empty (monorepo auto-detected)
+3. Configure in Project Settings:
+   - **Root Directory**: `packages/frontend` (important: must be set in UI)
    - **Framework**: Next.js
-   - **Build Command**: `cd packages/frontend && npm run build`
-   - **Output Directory**: `packages/frontend/.next`
+   - **Build Command**: Use default or `npm run build`
+   - **Output Directory**: `.next`
 4. Add environment variable:
    - `NEXT_PUBLIC_API_URL`: Your Railway backend URL
 5. Deploy!
+
+**Note**: The Root Directory setting is configured in the Vercel dashboard UI, not in `vercel.json`. The repo includes a `vercel.json` file that provides additional build configuration.
 
 ### Backend (Railway)
 
