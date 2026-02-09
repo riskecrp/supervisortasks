@@ -2,6 +2,7 @@ import { SheetsService } from './sheets.service';
 import { Discussion } from '../types';
 
 const DISCUSSIONS_SHEET = 'Discussions Pending Feedback';
+const NAMES_SHEET = 'Names';
 
 export class DiscussionsService {
   private sheetsService: SheetsService;
@@ -17,9 +18,6 @@ export class DiscussionsService {
       return [];
     }
 
-    const headers = rows[0];
-    const supervisors = headers.slice(3); // Supervisors start from column D (index 3)
-
     // Filter out empty rows (skip header row)
     const dataRows = rows.slice(1).filter(row => {
       // Check if all values are empty/null/undefined
@@ -31,10 +29,15 @@ export class DiscussionsService {
       return !allEmpty && !topicEmpty;
     });
 
+    // Get the headers from the Discussions sheet to map columns
+    // Note: These should match the full names from the Names tab
+    const headers = rows[0];
+    const discussionSupervisors = headers.slice(3).map(h => h ? h.toString().trim() : '').filter(Boolean);
+
     return dataRows.map((row, index) => {
       const supervisorFeedback: Record<string, boolean> = {};
       
-      supervisors.forEach((supervisor, i) => {
+      discussionSupervisors.forEach((supervisor, i) => {
         if (supervisor) {
           supervisorFeedback[supervisor] = row[3 + i] === 'TRUE' || row[3 + i] === true || row[3 + i] === 'YES';
         }
@@ -121,11 +124,45 @@ export class DiscussionsService {
   }
 
   async getSupervisorsFromDiscussions(): Promise<string[]> {
-    const rows = await this.sheetsService.readRange(`${DISCUSSIONS_SHEET}!A1:Z1`);
-    if (rows.length === 0) {
-      return [];
+    // Read supervisor names from the Names tab instead of Discussions headers
+    try {
+      const rows = await this.sheetsService.readRange(`${NAMES_SHEET}!A:A`);
+      if (rows.length === 0) {
+        return [];
+      }
+      // Skip header row if present, and trim all names
+      const names = rows.slice(1).map(row => row[0] ? row[0].toString().trim() : '').filter(Boolean);
+      return names;
+    } catch (error) {
+      console.error('Failed to read from Names sheet, falling back to Discussions headers:', error);
+      // Fallback to old behavior if Names sheet doesn't exist
+      const rows = await this.sheetsService.readRange(`${DISCUSSIONS_SHEET}!A1:Z1`);
+      if (rows.length === 0) {
+        return [];
+      }
+      return rows[0].slice(3).map(h => h ? h.toString().trim() : '').filter(Boolean);
     }
-    return rows[0].slice(3).filter(Boolean);
+  }
+  
+  async getSupervisorRanksFromNames(): Promise<Map<string, string>> {
+    const rankMap = new Map<string, string>();
+    try {
+      const rows = await this.sheetsService.readRange(`${NAMES_SHEET}!A:B`);
+      if (rows.length === 0) {
+        return rankMap;
+      }
+      // Skip header row if present
+      rows.slice(1).forEach(row => {
+        const name = row[0] ? row[0].toString().trim() : '';
+        const rank = row[1] ? row[1].toString().trim() : '';
+        if (name) {
+          rankMap.set(name, rank);
+        }
+      });
+    } catch (error) {
+      console.error('Failed to read ranks from Names sheet:', error);
+    }
+    return rankMap;
   }
 
   private numberToColumn(num: number): string {
