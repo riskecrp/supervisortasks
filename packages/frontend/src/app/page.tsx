@@ -10,25 +10,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { mockTasks } from '@/lib/mockData';
 import { Task } from '@/types';
 import { api } from '@/lib/api';
-
-function getStatusVariant(status: Task['status']) {
-  switch (status) {
-    case 'Completed':
-      return 'success';
-    case 'In Progress':
-      return 'info';
-    case 'Not Started':
-      return 'secondary';
-    case 'Blocked':
-      return 'destructive';
-    default:
-      return 'default';
-  }
-}
 
 function isOverdue(dueDate: string | null, completedDate: string | null): boolean {
   if (!dueDate || completedDate) return false;

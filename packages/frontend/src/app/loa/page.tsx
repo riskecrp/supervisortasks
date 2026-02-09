@@ -223,7 +223,7 @@ export default function LOAPage() {
             </div>
           ) : loaRecords.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              No LOA records found. Click "Add LOA" to create one.
+              No LOA records found. Click &quot;Add LOA&quot; to create one.
             </div>
           ) : (
             <Table>
