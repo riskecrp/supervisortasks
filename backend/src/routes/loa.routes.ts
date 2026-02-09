@@ -8,7 +8,7 @@ export function createLOARouter(loaService: LOAService): Router {
     if (error instanceof SheetAccessError) {
       return res.status(503).json({
         error: 'LOA data temporarily unavailable',
-        details: error?.message || '',
+        details: error.message || '',
       });
     }
     return res.status(500).json({ error: error?.message || fallbackMessage });
