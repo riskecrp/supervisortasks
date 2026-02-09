@@ -118,14 +118,14 @@ RATE_LIMIT_MAX_REQUESTS=100
 
 ### 2. Configure Build Settings
 
-Vercel should auto-detect the monorepo structure. Verify:
+Configure the following settings in the Vercel dashboard:
 
 - **Framework Preset**: Next.js
-- **Root Directory**: Leave empty (auto-detected)
-- **Build Command**: `cd packages/frontend && npm run build`
-- **Output Directory**: `packages/frontend/.next`
+- **Root Directory**: `packages/frontend` (click Edit to set this)
+- **Build Command**: Leave as default or use: `npm run build`
+- **Output Directory**: `.next`
 
-Or use the `vercel.json` configuration (already in the repo).
+**Important**: The Root Directory must be set to `packages/frontend` in the Vercel Project Settings UI. This cannot be configured via `vercel.json`. The `vercel.json` file in the repo root provides additional build configuration that will be used once the Root Directory is set correctly.
 
 ### 3. Add Environment Variables
 
