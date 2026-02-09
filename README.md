@@ -46,7 +46,7 @@ A modern web dashboard for managing supervisor tasks, discussions, feedback, and
    
 3. Edit `frontend/.env.local` and set your Railway backend URL:
    ```env
-   NEXT_PUBLIC_API_URL=https://your-backend-name.railway.app
+   NEXT_PUBLIC_API_URL=https://supervisortasks-production.up.railway.app
    ```
 
 4. Start the frontend:
@@ -208,17 +208,17 @@ The application is designed to work with the following Google Sheet tabs:
 
 **If you already have a backend deployed on Railway:**
 
-1. Get your Railway backend URL (e.g., `https://your-backend.railway.app`)
+**Your Railway backend is at:** `https://supervisortasks-production.up.railway.app`
 
-2. Configure the frontend:
+1. Configure the frontend:
    ```bash
    cd frontend
    cp .env.example .env.local
    # Edit .env.local and set:
-   # NEXT_PUBLIC_API_URL=https://your-backend.railway.app
+   # NEXT_PUBLIC_API_URL=https://supervisortasks-production.up.railway.app
    ```
 
-3. Run the frontend:
+2. Run the frontend:
    ```bash
    npm run dev
    ```
@@ -239,7 +239,7 @@ This Next.js application is optimized for deployment on Vercel:
    - **Build Command**: `npm run build`
 4. Add environment variable:
    - **Key**: `NEXT_PUBLIC_API_URL`
-   - **Value**: Your Railway backend URL (e.g., `https://your-backend.railway.app`)
+   - **Value**: `https://supervisortasks-production.up.railway.app`
 5. Deploy!
 
 ### Backend CORS Configuration

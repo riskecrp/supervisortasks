@@ -5,7 +5,7 @@ This guide explains how to connect the frontend to your Railway-hosted backend.
 ## Prerequisites
 
 - Backend is already deployed on Railway
-- You have your Railway backend URL (e.g., `https://your-backend.railway.app`)
+- You have your Railway backend URL (e.g., `https://supervisortasks-production.up.railway.app`)
 - Backend is configured with Google Sheets credentials
 
 ## Step 1: Get Your Railway Backend URL
@@ -126,9 +126,9 @@ If you see: `Access to fetch has been blocked by CORS policy`
 ### 404 Not Found
 
 The API endpoints should be:
-- `https://your-backend.railway.app/api/tasks`
-- `https://your-backend.railway.app/api/discussions`
-- `https://your-backend.railway.app/api/supervisors`
+- `https://supervisortasks-production.up.railway.app/api/tasks`
+- `https://supervisortasks-production.up.railway.app/api/discussions`
+- `https://supervisortasks-production.up.railway.app/api/supervisors`
 
 If getting 404:
 1. Verify backend is deployed correctly
@@ -139,12 +139,12 @@ If getting 404:
 
 ### Test Backend Health
 
-1. Open in browser: `https://your-backend.railway.app/health`
+1. Open in browser: `https://supervisortasks-production.up.railway.app/health`
 2. Should return: `{"status":"ok","timestamp":"..."}`
 
 ### Test API Endpoint
 
-1. Open in browser: `https://your-backend.railway.app/api/tasks`
+1. Open in browser: `https://supervisortasks-production.up.railway.app/api/tasks`
 2. Should return JSON array of tasks from Google Sheets
 3. If error, check Railway logs
 

@@ -25,14 +25,14 @@ The frontend is now fully configured to work with your Railway-hosted backend.
 ## How to Use Your Railway Backend
 
 ### Step 1: Get Railway URL
-Find your backend URL in Railway dashboard (looks like `https://your-backend.railway.app`)
+Find your backend URL in Railway dashboard (looks like `https://supervisortasks-production.up.railway.app`)
 
 ### Step 2: Configure Frontend
 ```bash
 cd frontend
 cp .env.example .env.local
 # Edit .env.local and add:
-# NEXT_PUBLIC_API_URL=https://your-backend.railway.app
+# NEXT_PUBLIC_API_URL=https://supervisortasks-production.up.railway.app
 ```
 
 ### Step 3: Run
@@ -57,8 +57,8 @@ FRONTEND_URL=https://your-app.vercel.app,http://localhost:3000
 
 ## Verification
 
-✅ Backend health: https://your-backend.railway.app/health
-✅ Tasks API: https://your-backend.railway.app/api/tasks
+✅ Backend health: https://supervisortasks-production.up.railway.app/health
+✅ Tasks API: https://supervisortasks-production.up.railway.app/api/tasks
 ✅ Frontend connects: No warning message, real data displays
 
 ## Need Help?

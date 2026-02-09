@@ -8,7 +8,7 @@ Your backend is already on Railway. Here's how to connect the frontend:
 
 Your Railway backend URL looks like:
 ```
-https://your-backend-name.railway.app
+https://supervisortasks-production.up.railway.app
 ```
 
 To find it:
@@ -25,10 +25,10 @@ cp .env.example .env.local
 
 Edit `frontend/.env.local`:
 ```env
-NEXT_PUBLIC_API_URL=https://your-backend-name.railway.app
+NEXT_PUBLIC_API_URL=https://supervisortasks-production.up.railway.app
 ```
 
-**Important:** Replace `your-backend-name` with your actual Railway URL!
+**Note:** The URL is already set to your Railway backend!
 
 ### Step 3: Run Frontend
 
@@ -79,7 +79,7 @@ FRONTEND_URL=https://your-app.vercel.app,http://localhost:3000
 3. Set Root Directory: `frontend`
 4. Add environment variable:
    - Key: `NEXT_PUBLIC_API_URL`
-   - Value: `https://your-backend-name.railway.app`
+   - Value: `https://supervisortasks-production.up.railway.app`
 5. Deploy!
 
 ---
@@ -94,7 +94,7 @@ See [RAILWAY_SETUP.md](RAILWAY_SETUP.md) for detailed troubleshooting.
 
 Test your Railway backend:
 ```
-https://your-backend-name.railway.app/health
+https://supervisortasks-production.up.railway.app/health
 ```
 
 Should return:
@@ -104,7 +104,7 @@ Should return:
 
 Test Tasks API:
 ```
-https://your-backend-name.railway.app/api/tasks
+https://supervisortasks-production.up.railway.app/api/tasks
 ```
 
 Should return JSON array of tasks from Google Sheets.
