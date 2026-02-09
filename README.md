@@ -242,6 +242,26 @@ This Next.js application is optimized for deployment on Vercel:
    - **Value**: `https://supervisortasks-production.up.railway.app`
 5. Deploy!
 
+### Railway Backend Environment Variables
+
+**⚠️ Important**: Your Railway backend needs these environment variables to work:
+
+**Quick Reference**: See [RAILWAY_QUICK_REFERENCE.md](RAILWAY_QUICK_REFERENCE.md)  
+**Detailed Guide**: See [RAILWAY_ENV_VARIABLES.md](RAILWAY_ENV_VARIABLES.md)
+
+**Required Variables**:
+```bash
+NODE_ENV=production                      # ✅ You have this
+GOOGLE_SHEET_ID=your_sheet_id           # ⚠️ Need to add
+GOOGLE_SERVICE_ACCOUNT_EMAIL=...        # ⚠️ Need to add
+GOOGLE_PRIVATE_KEY="-----BEGIN..."      # ⚠️ Need to add
+FRONTEND_URL=https://your-app.vercel.app # 📝 Recommended
+```
+
+For step-by-step instructions on getting Google credentials and setting these variables in Railway, see:
+- **[RAILWAY_QUICK_REFERENCE.md](RAILWAY_QUICK_REFERENCE.md)** - Quick copy-paste template
+- **[RAILWAY_ENV_VARIABLES.md](RAILWAY_ENV_VARIABLES.md)** - Complete guide with troubleshooting
+
 ### Backend CORS Configuration
 
 Make sure your Railway backend has the correct CORS configuration:
