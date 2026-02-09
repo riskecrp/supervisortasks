@@ -4,10 +4,7 @@ import { SheetAccessError } from '../services/sheets.service';
 
 export function createLOARouter(loaService: LOAService): Router {
   const router = Router();
-  const isSheetAccessError = (error: any) =>
-    error instanceof SheetAccessError ||
-    (typeof error?.message === 'string' &&
-      (error.message.includes('Google Sheets') || error.message.includes('credentials')));
+  const isSheetAccessError = (error: any) => error instanceof SheetAccessError;
 
   // Get all LOA records
   router.get('/', async (req: Request, res: Response) => {
