@@ -93,8 +93,8 @@ export default function TasksPage() {
                 {tasks.map((task) => {
                   const overdue = isOverdue(task.dueDate, task.completedDate);
                   return (
-                    <TableRow key={task.id} className={overdue ? 'bg-amber-50/30' : ''}>
-                      <TableCell className={overdue ? 'text-amber-900 font-medium' : ''}>
+                    <TableRow key={task.id} className={overdue ? 'bg-amber-50/30 dark:bg-amber-900/20' : ''}>
+                      <TableCell className={overdue ? 'text-amber-900 dark:text-amber-300 font-medium' : ''}>
                         {task.taskList}
                       </TableCell>
                       <TableCell>{task.taskOwner}</TableCell>
@@ -104,7 +104,7 @@ export default function TasksPage() {
                         </Badge>
                       </TableCell>
                       <TableCell>{task.claimedAssignedDate || '-'}</TableCell>
-                      <TableCell className={overdue ? 'text-amber-800' : ''}>
+                      <TableCell className={overdue ? 'text-amber-800 dark:text-amber-300' : ''}>
                         {task.dueDate || '-'}
                       </TableCell>
                       <TableCell>{task.completedDate || '-'}</TableCell>
