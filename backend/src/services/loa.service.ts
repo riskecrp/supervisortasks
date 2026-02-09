@@ -143,7 +143,9 @@ export class LOAService {
       );
 
       if (targetIndex === -1) {
-        throw new Error(`Supervisor ${normalizedName} not found in Task Rotation sheet`);
+        throw new Error(
+          `Supervisor "${normalizedName}" not found in Task Rotation sheet. Verify the name exists in column A.`
+        );
       }
 
       const rowNumber = targetIndex + 2; // account for header
