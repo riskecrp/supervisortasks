@@ -18,8 +18,8 @@ export class DiscussionsService {
       return [];
     }
 
-    const headers = rows[0];
-    const supervisors = headers.slice(3).map(h => h ? h.toString().trim() : '').filter(Boolean); // Supervisors start from column D (index 3)
+    // Get supervisor names from the Names tab
+    const supervisors = await this.getSupervisorsFromDiscussions();
 
     // Filter out empty rows (skip header row)
     const dataRows = rows.slice(1).filter(row => {
@@ -35,7 +35,11 @@ export class DiscussionsService {
     return dataRows.map((row, index) => {
       const supervisorFeedback: Record<string, boolean> = {};
       
-      supervisors.forEach((supervisor, i) => {
+      // Get the headers from the Discussions sheet to map columns
+      const headers = rows[0];
+      const discussionSupervisors = headers.slice(3).map(h => h ? h.toString().trim() : '').filter(Boolean);
+      
+      discussionSupervisors.forEach((supervisor, i) => {
         if (supervisor) {
           supervisorFeedback[supervisor] = row[3 + i] === 'TRUE' || row[3 + i] === true || row[3 + i] === 'YES';
         }
