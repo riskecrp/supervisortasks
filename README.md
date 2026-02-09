@@ -25,6 +25,31 @@ A modern web dashboard for managing supervisor tasks, discussions, feedback, and
 - (Future) Google Cloud Project with Sheets API enabled
 - (Future) Service account credentials for Google Sheets API
 
+## Testing Without Backend
+
+**Note**: This application is designed to run on **Railway (backend) + Vercel (frontend)**, not locally.
+
+### Cloud-Hosted Architecture
+
+- **Backend**: Railway with Google Sheets **two-way sync** (read AND write)
+- **Frontend**: Vercel
+- **Data**: Google Sheets (persistent storage)
+
+### Primary Testing Method
+
+Access your deployed application:
+```
+https://your-app.vercel.app
+```
+
+All CRUD operations (Create, Read, Update, Delete) work with full Google Sheets synchronization.
+
+### Mock Data Fallback
+
+If Railway backend is temporarily unavailable, the frontend automatically uses **read-only** mock data for UI testing. See **[TESTING.md](TESTING.md)** for complete testing guide.
+
+**Important**: Mock data is read-only. For full two-way Google Sheets synchronization, use the deployed Railway backend.
+
 ## Setup Instructions
 
 ### Quick Start (With Railway Backend)
