@@ -1,10 +1,13 @@
 import { Router, Request, Response } from 'express';
 import { LOAService } from '../services/loa.service';
+import { SheetAccessError } from '../services/sheets.service';
 
 export function createLOARouter(loaService: LOAService): Router {
   const router = Router();
-  const isSheetAccessError = (message: string) =>
-    message.includes('Google Sheets') || message.includes('credentials');
+  const isSheetAccessError = (error: any) =>
+    error instanceof SheetAccessError ||
+    (typeof error?.message === 'string' &&
+      (error.message.includes('Google Sheets') || error.message.includes('credentials')));
 
   // Get all LOA records
   router.get('/', async (req: Request, res: Response) => {
@@ -14,7 +17,7 @@ export function createLOARouter(loaService: LOAService): Router {
     } catch (error: any) {
       console.error('Error getting LOA records:', error);
       const message = error?.message || '';
-      if (isSheetAccessError(message)) {
+      if (isSheetAccessError(error)) {
         return res.status(503).json({
           error: 'LOA data temporarily unavailable',
           details: message,
@@ -33,7 +36,7 @@ export function createLOARouter(loaService: LOAService): Router {
     } catch (error: any) {
       console.error('Error getting active LOA records:', error);
       const message = error?.message || '';
-      if (isSheetAccessError(message)) {
+      if (isSheetAccessError(error)) {
         return res.status(503).json({
           error: 'LOA data temporarily unavailable',
           details: message,
