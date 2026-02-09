@@ -1,23 +1,24 @@
 # Build stage
 FROM node:20-alpine AS builder
-
 WORKDIR /app
 
-# Copy package files
+# Copy package files for workspace
 COPY package*.json ./
 
-# Install dependencies
+# Install dependencies for the entire workspace
 RUN npm ci
 
-# Copy source code
-COPY . .
+# Copy frontend source
+COPY frontend ./frontend
 
-# Build the Next.js application
-RUN npm run build
+# Build the application
+WORKDIR /app/frontend
+# Set experimental worker pool to 1 to avoid Next.js 16.1.6 Docker build bug
+ENV NEXT_BUILD_WORKER_POOL=1
+RUN npx next build
 
 # Production stage
 FROM node:20-alpine AS runner
-
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -28,12 +29,12 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 # Copy necessary files from builder
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
-
-# Set correct permissions
-RUN chown -R nextjs:nodejs /app
+# Copy node_modules and built files
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next ./frontend/.next
+COPY --from=builder --chown=nextjs:nodejs /app/frontend/public ./frontend/public
+COPY --from=builder --chown=nextjs:nodejs /app/frontend/package.json ./frontend/package.json
+COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
 
 USER nextjs
 
@@ -42,4 +43,5 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["node", "server.js"]
+WORKDIR /app/frontend
+CMD ["npx", "next", "start"]
