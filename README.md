@@ -27,21 +27,28 @@ A modern web dashboard for managing supervisor tasks, discussions, feedback, and
 
 ## Testing Without Backend
 
-**The application works without a backend!** It automatically falls back to mock data for testing and development.
+**Note**: This application is designed to run on **Railway (backend) + Vercel (frontend)**, not locally.
 
-```bash
-# Quick test - no backend required
-npm install
-npm run dev
-# Open http://localhost:3000 - works immediately with mock data!
+### Cloud-Hosted Architecture
+
+- **Backend**: Railway with Google Sheets **two-way sync** (read AND write)
+- **Frontend**: Vercel
+- **Data**: Google Sheets (persistent storage)
+
+### Primary Testing Method
+
+Access your deployed application:
+```
+https://your-app.vercel.app
 ```
 
-**For comprehensive testing guide**, see **[TESTING.md](TESTING.md)** for:
-- How to test without backend
-- Mock data usage
-- Environment configuration
-- Testing different scenarios
-- Troubleshooting tips
+All CRUD operations (Create, Read, Update, Delete) work with full Google Sheets synchronization.
+
+### Mock Data Fallback
+
+If Railway backend is temporarily unavailable, the frontend automatically uses **read-only** mock data for UI testing. See **[TESTING.md](TESTING.md)** for complete testing guide.
+
+**Important**: Mock data is read-only. For full two-way Google Sheets synchronization, use the deployed Railway backend.
 
 ## Setup Instructions
 

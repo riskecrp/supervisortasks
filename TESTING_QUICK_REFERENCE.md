@@ -1,77 +1,81 @@
 # Quick Testing Reference
 
-## ❓ Backend Not Available? No Problem!
+## ⚠️ Important: Cloud-Hosted Architecture
 
-The app automatically uses mock data when the backend is unavailable. This is **by design** for easy testing.
+This application is **NOT for local development**. It runs on:
+- **Backend**: Railway (with Google Sheets two-way sync)
+- **Frontend**: Vercel
+- **Data**: Google Sheets (persistent storage)
 
-## 🚀 Quick Start (No Backend Needed)
+## 🚀 Primary Testing Method
 
-```bash
-git clone <repository-url>
-cd supervisortasks
-npm install
-npm run dev
+**Access the deployed application**:
+```
+https://your-app.vercel.app
 ```
 
-Open http://localhost:3000 - **It just works!** ✅
+**What you can do**:
+- ✅ **View** data from Google Sheets
+- ✅ **Create** tasks/discussions/supervisors → Writes to Google Sheets
+- ✅ **Update** data → Updates Google Sheets  
+- ✅ **Delete** data → Removes from Google Sheets
 
-## 📋 What You'll See
+**This is the intended way to use the application!**
 
-- ⚠️ Warning banner: "Using mock data - backend not available"
-- ✅ All pages work normally with sample data
-- ✅ All UI features testable
+## 📋 Mock Data Fallback (Read-Only)
+
+If Railway backend is temporarily unavailable:
+- ⚠️ Warning banner appears: "Using mock data - backend not available"
+- ✅ View sample data for UI testing
+- ❌ **Cannot create/update/delete** (read-only mode)
+- ❌ **No writes to Google Sheets**
 
 ## 🎯 Testing Modes
 
-### 1. Mock Data Mode (Default)
-**Use for**: UI development, styling, layout testing
+### 1. Production Testing (Recommended)
+**Use for**: Full testing with two-way Google Sheets sync
 
-```bash
-npm run dev
-# Backend connection fails → Uses mock data automatically
+```
+Frontend: https://your-app.vercel.app
+Backend: https://supervisortasks-production.up.railway.app
 ```
 
-### 2. Force Mock Data
-**Use for**: Testing fallback mechanism
+✅ All CRUD operations work  
+✅ Changes persist to Google Sheets  
+✅ Real data testing
+
+### 2. Mock Data Mode (Fallback Only)
+**Use for**: UI testing when Railway is down
+
+- Frontend automatically uses mock data if backend unavailable
+- **Read-only** - No writes possible
+- Warning banner shows: "Using mock data"
+
+### 3. Local Development (Advanced - Not Recommended)
+**Use for**: Code changes only
 
 ```bash
-# Create frontend/.env.local
-NEXT_PUBLIC_API_URL=http://invalid-url
-npm run dev
+# Only if you're a developer making backend changes
+cd backend && npm run dev
+cd frontend && npm run dev
 ```
 
-### 3. Local Backend
-**Use for**: Integration testing
-
-```bash
-# Terminal 1: Backend
-cd backend
-npm install
-npm run dev
-
-# Terminal 2: Frontend
-cd frontend
-echo "NEXT_PUBLIC_API_URL=http://localhost:3001" > .env.local
-npm run dev
-```
-
-### 4. Railway Backend
-**Use for**: Production-like testing
-
-```bash
-cd frontend
-echo "NEXT_PUBLIC_API_URL=https://supervisortasks-production.up.railway.app" > .env.local
-npm run dev
-```
+**Requires**: Google credentials, Node.js, manual setup
 
 ## ✅ Testing Checklist
 
-- [ ] Run `npm run dev` - app loads
-- [ ] Navigate to `/` - Tasks page shows mock data
-- [ ] Navigate to `/discussions` - Discussions page works
-- [ ] Navigate to `/supervisors` - Supervisors page works
-- [ ] Check console - no critical errors
-- [ ] See warning banner about mock data
+### Production Deployment
+- [ ] Access deployed Vercel frontend
+- [ ] No warning banner (Railway connected)
+- [ ] Create a test task → Check Google Sheets
+- [ ] Update task → Verify in Google Sheets
+- [ ] Delete task → Confirm removed from Google Sheets
+- [ ] Test discussions and supervisors pages
+
+### Mock Data Fallback
+- [ ] Warning banner appears if Railway down
+- [ ] Can view sample data (read-only)
+- [ ] Understand: No writes to Google Sheets in this mode
 
 ## 🔍 Verify Backend Status
 
@@ -79,15 +83,22 @@ npm run dev
 # Check if Railway backend is up
 curl https://supervisortasks-production.up.railway.app/health
 
-# Working: {"status":"ok","timestamp":"..."}
-# Not working: Connection refused or timeout
+# Should return: {"status":"ok","timestamp":"..."}
 ```
+
+## 📊 Two-Way Sync Verification
+
+1. **Create via frontend** → Check appears in Google Sheets
+2. **Edit in Google Sheets** → Refresh frontend, see changes
+3. **Delete via frontend** → Verify removed from Google Sheets
+
+✅ Confirms: Two-way synchronization working
 
 ## 📚 More Information
 
-See **[TESTING.md](TESTING.md)** for comprehensive guide including:
-- Detailed testing scenarios
-- Environment configuration
-- Mock data customization
-- Troubleshooting
-- CI/CD testing
+**Complete guide**: [TESTING.md](TESTING.md)
+
+**Deployment guides**:
+- [RAILWAY_SETUP.md](RAILWAY_SETUP.md) - Backend deployment
+- [VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md) - Frontend deployment
+- [DATA_FLOW_VERIFICATION.md](DATA_FLOW_VERIFICATION.md) - Architecture overview
