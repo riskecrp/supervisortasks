@@ -17,11 +17,12 @@ export class SupervisorsService {
 
   async getAllSupervisors(): Promise<Supervisor[]> {
     const supervisorNames = await this.discussionsService.getSupervisorsFromDiscussions();
+    const supervisorRanks = await this.discussionsService.getSupervisorRanksFromNames();
     
     // Ensure Task Rotation sheet is initialized with all supervisors
     await this.ensureTaskRotationSync(supervisorNames);
     
-    // Get LOA status and rank for each supervisor from Task Rotation
+    // Get LOA status for each supervisor from Task Rotation
     let taskRotationData: any[][] = [];
     try {
       taskRotationData = await this.sheetsService.readRange(`${TASK_ROTATION_SHEET}!A:E`);
@@ -29,27 +30,27 @@ export class SupervisorsService {
       console.log('Task Rotation sheet not found');
     }
 
-    // Create a map of supervisor data
-    const supervisorDataMap = new Map<string, { rank: string, onLOA: boolean }>();
+    // Create a map of supervisor LOA status
+    const supervisorLOAMap = new Map<string, boolean>();
     if (taskRotationData.length > 1) {
       taskRotationData.slice(1).forEach(row => {
         const name = row[0] ? row[0].toString().trim() : '';
-        const rank = row[1] || '';
         const loaStatus = row[2] === 'TRUE' || row[2] === true;
         if (name) {
-          supervisorDataMap.set(name, { rank, onLOA: loaStatus });
+          supervisorLOAMap.set(name, loaStatus);
         }
       });
     }
 
     return supervisorNames.map(name => {
       const trimmedName = name.trim();
-      const data = supervisorDataMap.get(trimmedName) || { rank: '', onLOA: false };
+      const rank = supervisorRanks.get(trimmedName) || '';
+      const onLOA = supervisorLOAMap.get(trimmedName) || false;
       return {
         name: trimmedName,
-        rank: data.rank,
+        rank,
         active: true,
-        onLOA: data.onLOA,
+        onLOA,
       };
     });
   }
@@ -102,12 +103,19 @@ export class SupervisorsService {
     headers.push(name);
     await this.sheetsService.writeRange(`${DISCUSSIONS_SHEET}!A1:Z1`, [headers]);
 
+    // Get rank from Names sheet if not provided
+    let finalRank = rank || '';
+    if (!finalRank) {
+      const supervisorRanks = await this.discussionsService.getSupervisorRanksFromNames();
+      finalRank = supervisorRanks.get(name) || '';
+    }
+
     // Add supervisor to Task Rotation sheet
-    await this.addSupervisorToTaskRotation(name, rank || '');
+    await this.addSupervisorToTaskRotation(name, finalRank);
 
     return {
       name,
-      rank: rank || '',
+      rank: finalRank,
       active: true,
       onLOA: false,
     };

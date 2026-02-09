@@ -2,6 +2,7 @@ import { SheetsService } from './sheets.service';
 import { Discussion } from '../types';
 
 const DISCUSSIONS_SHEET = 'Discussions Pending Feedback';
+const NAMES_SHEET = 'Names';
 
 export class DiscussionsService {
   private sheetsService: SheetsService;
@@ -121,11 +122,45 @@ export class DiscussionsService {
   }
 
   async getSupervisorsFromDiscussions(): Promise<string[]> {
-    const rows = await this.sheetsService.readRange(`${DISCUSSIONS_SHEET}!A1:Z1`);
-    if (rows.length === 0) {
-      return [];
+    // Read supervisor names from the Names tab instead of Discussions headers
+    try {
+      const rows = await this.sheetsService.readRange(`${NAMES_SHEET}!A:A`);
+      if (rows.length === 0) {
+        return [];
+      }
+      // Skip header row if present, and trim all names
+      const names = rows.slice(1).map(row => row[0] ? row[0].toString().trim() : '').filter(Boolean);
+      return names;
+    } catch (error) {
+      console.error('Failed to read from Names sheet, falling back to Discussions headers:', error);
+      // Fallback to old behavior if Names sheet doesn't exist
+      const rows = await this.sheetsService.readRange(`${DISCUSSIONS_SHEET}!A1:Z1`);
+      if (rows.length === 0) {
+        return [];
+      }
+      return rows[0].slice(3).map(h => h ? h.toString().trim() : '').filter(Boolean);
     }
-    return rows[0].slice(3).map(h => h ? h.toString().trim() : '').filter(Boolean);
+  }
+  
+  async getSupervisorRanksFromNames(): Promise<Map<string, string>> {
+    const rankMap = new Map<string, string>();
+    try {
+      const rows = await this.sheetsService.readRange(`${NAMES_SHEET}!A:B`);
+      if (rows.length === 0) {
+        return rankMap;
+      }
+      // Skip header row if present
+      rows.slice(1).forEach(row => {
+        const name = row[0] ? row[0].toString().trim() : '';
+        const rank = row[1] ? row[1].toString().trim() : '';
+        if (name) {
+          rankMap.set(name, rank);
+        }
+      });
+    } catch (error) {
+      console.error('Failed to read ranks from Names sheet:', error);
+    }
+    return rankMap;
   }
 
   private numberToColumn(num: number): string {
