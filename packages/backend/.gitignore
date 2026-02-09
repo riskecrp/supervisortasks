@@ -3,9 +3,11 @@ node_modules/
 dist/
 *.log
 
-# Environment variables
+# Environment variables (keep .env.example for reference)
 .env
 .env.local
+.env.production
+.env.development
 
 # Google credentials
 *credentials*.json
