@@ -48,6 +48,17 @@ export default function LOAPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate dates
+    if (formData.startDate && formData.endDate) {
+      const start = new Date(formData.startDate);
+      const end = new Date(formData.endDate);
+      if (end < start) {
+        alert('End date cannot be before start date.');
+        return;
+      }
+    }
+    
     try {
       if (editingRecord) {
         await api.loa.update(editingRecord.id, formData);
@@ -66,7 +77,7 @@ export default function LOAPage() {
       });
     } catch (err) {
       console.error('Failed to save LOA record:', err);
-      alert('Failed to save LOA record. Please try again.');
+      alert('Failed to save LOA record. Please check your input and try again.');
     }
   };
 
@@ -91,7 +102,7 @@ export default function LOAPage() {
       await fetchLOARecords();
     } catch (err) {
       console.error('Failed to delete LOA record:', err);
-      alert('Failed to delete LOA record. Please try again.');
+      alert('Failed to delete LOA record. Please check your connection and try again.');
     }
   };
 

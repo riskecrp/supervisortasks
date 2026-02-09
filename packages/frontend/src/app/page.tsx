@@ -59,7 +59,7 @@ export default function TasksPage() {
       );
     } catch (err) {
       console.error('Failed to update task status:', err);
-      alert('Failed to update task status. Please try again.');
+      alert('Failed to update task status. Please check your connection and try again.');
     }
   };
 
