@@ -31,11 +31,12 @@ services:
 
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: frontend/Dockerfile
     container_name: supervisortasks-frontend
     ports:
-      - "3000:80"
+      # Frontend runs with Next.js server on port 3000
+      - "3000:3000"
     depends_on:
       - backend
     restart: unless-stopped
