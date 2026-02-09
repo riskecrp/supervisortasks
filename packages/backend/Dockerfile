@@ -1,35 +1,55 @@
-FROM node:20-alpine as builder
+# 1. Base Image
+FROM node:18-alpine AS base
 
-WORKDIR /app
+# Set working directory
+WORKDIR /usr/src/app
 
-# Copy package files
-COPY package*.json ./
 
-# Install all dependencies (including devDependencies for build)
-RUN npm ci
+# 2. Dependencies
+FROM base AS deps
+WORKDIR /usr/src/app
 
-# Copy source code
+# Copy root package files
+COPY package.json package-lock.json ./
+
+# Copy backend package files
+COPY packages/backend/package.json ./packages/backend/
+
+# Install ALL dependencies (including dev) for the entire monorepo
+# This is necessary for the build step
+RUN npm install
+
+
+# 3. Builder
+FROM base AS builder
+WORKDIR /usr/src/app
+
+# Copy all dependencies from the previous stage
+COPY --from=deps /usr/src/app/node_modules ./node_modules
+COPY --from=deps /usr/src/app/packages/backend/node_modules ./packages/backend/node_modules
+
+
+# Copy the rest of the source code
 COPY . .
 
-# Build TypeScript
-RUN npm run build
+# Build the backend TypeScript code into JavaScript
+RUN npm run build --prefix packages/backend
 
-# Production image
-FROM node:20-alpine
 
-WORKDIR /app
+# 4. Production Runner
+FROM node:18-alpine AS runner
+WORKDIR /usr/src/app
 
-# Copy package files
-COPY package*.json ./
+# Copy production dependencies from the 'deps' stage
+COPY --from=deps /usr/src/app/node_modules ./node_modules
+COPY --from=deps /usr/src/app/packages/backend/node_modules ./packages/backend/node_modules
 
-# Install only production dependencies
-RUN npm ci --only=production
+# Copy the built backend code from the 'builder' stage
+COPY --from=builder /usr/src/app/packages/backend/dist ./packages/backend/dist
 
-# Copy built files from builder
-COPY --from=builder /app/dist ./dist
+# Copy the backend's package.json
+COPY packages/backend/package.json ./packages/backend/
 
-# Expose port
+# Expose port and start the server
 EXPOSE 3001
-
-# Start the application
-CMD ["npm", "start"]
+CMD [ "npm", "start", "--prefix", "packages/backend" ]
