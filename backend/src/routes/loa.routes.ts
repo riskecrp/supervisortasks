@@ -4,14 +4,15 @@ import { SheetAccessError } from '../services/sheets.service';
 
 export function createLOARouter(loaService: LOAService): Router {
   const router = Router();
-  const handleSheetError = (res: Response, error: any, fallbackMessage: string) => {
+  const handleSheetError = (res: Response, error: any, fallbackMessage: string): void => {
     if (error instanceof SheetAccessError) {
-      return res.status(503).json({
+      res.status(503).json({
         error: 'LOA data temporarily unavailable',
         details: error.message || '',
       });
+      return;
     }
-    return res.status(500).json({ error: error?.message || fallbackMessage });
+    res.status(500).json({ error: error?.message || fallbackMessage });
   };
 
   // Get all LOA records
