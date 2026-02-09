@@ -15,6 +15,28 @@ export function createTasksRouter(tasksService: TasksService): Router {
     }
   });
 
+  // Get task history (place before param routes to avoid route conflicts)
+  router.get('/history/all', async (req: Request, res: Response) => {
+    try {
+      const history = await tasksService.getTaskHistory();
+      res.json(history);
+    } catch (error: any) {
+      console.error('Error getting task history:', error);
+      res.status(500).json({ error: error.message || 'Failed to fetch task history' });
+    }
+  });
+
+  // Get available statuses
+  router.get('/statuses/available', async (req: Request, res: Response) => {
+    try {
+      const statuses = await tasksService.getAvailableStatuses();
+      res.json(statuses);
+    } catch (error: any) {
+      console.error('Error getting available statuses:', error);
+      res.status(500).json({ error: error.message || 'Failed to fetch available statuses' });
+    }
+  });
+
   // Get single task
   router.get('/:id', async (req: Request, res: Response) => {
     try {

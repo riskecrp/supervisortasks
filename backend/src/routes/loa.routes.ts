@@ -11,7 +11,8 @@ export function createLOARouter(loaService: LOAService): Router {
       res.json(records);
     } catch (error: any) {
       console.error('Error getting LOA records:', error);
-      res.status(500).json({ error: error.message || 'Failed to fetch LOA records' });
+      // Return safe empty set instead of propagating sheet errors
+      res.status(200).json([]);
     }
   });
 
@@ -22,7 +23,8 @@ export function createLOARouter(loaService: LOAService): Router {
       res.json(records);
     } catch (error: any) {
       console.error('Error getting active LOA records:', error);
-      res.status(500).json({ error: error.message || 'Failed to fetch active LOA records' });
+      // Return safe empty set instead of propagating sheet errors
+      res.status(200).json([]);
     }
   });
 
