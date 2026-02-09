@@ -8,7 +8,7 @@ export function createLOARouter(loaService: LOAService): Router {
     if (error instanceof SheetAccessError) {
       res.status(503).json({
         error: 'LOA data temporarily unavailable',
-        details: error.message || '',
+        details: error.message,
       });
       return;
     }
@@ -23,6 +23,7 @@ export function createLOARouter(loaService: LOAService): Router {
     } catch (error: any) {
       console.error('Error getting LOA records:', error);
       handleSheetError(res, error, 'Failed to fetch LOA records');
+      return;
     }
   });
 
@@ -34,6 +35,7 @@ export function createLOARouter(loaService: LOAService): Router {
     } catch (error: any) {
       console.error('Error getting active LOA records:', error);
       handleSheetError(res, error, 'Failed to fetch active LOA records');
+      return;
     }
   });
 
