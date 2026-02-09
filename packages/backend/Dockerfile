@@ -10,13 +10,13 @@ FROM base AS deps
 WORKDIR /usr/src/app
 
 # Copy root package files
-COPY package.json package-lock.json ./
+COPY package.json ./
 
 # Copy backend package files
 COPY packages/backend/package.json ./packages/backend/
 
 # Install ALL dependencies (including dev) for the entire monorepo
-# This is necessary for the build step
+# This will also generate a lockfile within the Docker image during the build
 RUN npm install
 
 
@@ -27,6 +27,8 @@ WORKDIR /usr/src/app
 # Copy all dependencies from the previous stage
 COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY --from=deps /usr/src/app/packages/backend/node_modules ./packages/backend/node_modules
+# Copy the lockfile generated in the previous stage
+COPY --from=deps /usr/src/app/package-lock.json ./
 
 
 # Copy the rest of the source code
@@ -40,15 +42,15 @@ RUN npm run build --prefix packages/backend
 FROM node:18-alpine AS runner
 WORKDIR /usr/src/app
 
-# Copy production dependencies from the 'deps' stage
-COPY --from=deps /usr/src/app/node_modules ./node_modules
-COPY --from=deps /usr/src/app/packages/backend/node_modules ./packages/backend/node_modules
+# Re-install only production dependencies using the lockfile
+# This ensures a clean, small final image
+COPY package.json package-lock.json ./
+COPY packages/backend/package.json ./packages/backend/
+RUN npm ci --omit=dev
 
 # Copy the built backend code from the 'builder' stage
 COPY --from=builder /usr/src/app/packages/backend/dist ./packages/backend/dist
 
-# Copy the backend's package.json
-COPY packages/backend/package.json ./packages/backend/
 
 # Expose port and start the server
 EXPOSE 3001
