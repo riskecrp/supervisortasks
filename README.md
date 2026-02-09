@@ -27,6 +27,41 @@ A modern web dashboard for managing supervisor tasks, discussions, feedback, and
 
 ## Setup Instructions
 
+### Quick Start (With Railway Backend)
+
+**If you already have a backend deployed on Railway:**
+
+1. Clone and install:
+   ```bash
+   git clone <repository-url>
+   cd supervisortasks
+   npm install
+   ```
+
+2. Configure frontend to use your Railway backend:
+   ```bash
+   cd frontend
+   cp .env.example .env.local
+   ```
+   
+3. Edit `frontend/.env.local` and set your Railway backend URL:
+   ```env
+   NEXT_PUBLIC_API_URL=https://supervisortasks-production.up.railway.app
+   ```
+
+4. Start the frontend:
+   ```bash
+   npm run dev
+   ```
+
+5. Open http://localhost:3000 - Your app will load data from Railway! 🚀
+
+**For detailed Railway setup and troubleshooting, see [RAILWAY_SETUP.md](RAILWAY_SETUP.md)**
+
+---
+
+### Full Setup (Local Development with Backend)
+
 ### 1. Clone the Repository
 
 ```bash
@@ -40,7 +75,11 @@ cd supervisortasks
 npm install
 ```
 
-### 3. Run the Application
+### 3. Configure Backend (Optional - if running locally)
+
+See [QUICKSTART.md](QUICKSTART.md) for detailed backend setup instructions with Google Sheets.
+
+### 4. Run the Application
 
 #### Development Mode
 
@@ -70,35 +109,49 @@ supervisortasks/
 │   │   ├── components/      # React components
 │   │   │   ├── ui/          # shadcn/ui components
 │   │   │   └── Sidebar.tsx  # Navigation sidebar
-│   │   ├── lib/             # Utilities and mock data
+│   │   ├── lib/             # Utilities, API client, and mock data
 │   │   └── types/           # TypeScript type definitions
 │   └── package.json
-├── backend/                  # (To be integrated with Google Sheets API)
+├── backend/                  # Express API with Google Sheets integration
+│   │                         # (Can be deployed to Railway)
+│   ├── src/
+│   │   ├── services/        # Google Sheets service, business logic
+│   │   ├── routes/          # API endpoints
+│   │   └── index.ts         # Server entry point
+│   └── package.json
 └── package.json             # Root package.json
 ```
 
 ## Current Features
+
+### Backend Integration
+
+- **API Client**: Connects to Railway-hosted backend or local backend
+- **Real-time Data**: Fetches tasks, discussions, and supervisors from Google Sheets via API
+- **Graceful Fallback**: Uses mock data if backend is unavailable
+- **Loading States**: Shows loading indicators while fetching data
+- **Error Handling**: Displays warnings when backend connection fails
 
 ### Pages
 
 1. **Tasks Page (`/`)**
    - Display tasks in a table format
    - Columns: Task List, Task Owner, Status, Claimed/Assigned Date, Due Date, Completed Date, Notes
-   - Color-coded status badges (In Progress, Not Started, Completed, Blocked)
-   - Red highlighting for overdue tasks
-   - Uses mock data
+   - Soft, muted status badges (In Progress, Not Started, Completed, Blocked)
+   - Subtle amber highlighting for overdue tasks
+   - Fetches from backend API with fallback to mock data
 
 2. **Discussions Page (`/discussions`)**
    - Display discussion topics
    - Columns: Date Posted, Topic, Direct Link, Supervisor Responses
-   - Response count badges
-   - Uses mock data
+   - Response count badges with muted colors
+   - Fetches from backend API with fallback to mock data
 
 3. **Supervisors Page (`/supervisors`)**
    - Display supervisor information
    - Columns: Name, Rank, LOA Status, LOA Start Date, LOA End Date
-   - Active/On Leave status badges
-   - Uses mock data
+   - Active/On Leave status badges with soft colors
+   - Fetches from backend API with fallback to mock data
 
 ### Navigation
 
@@ -149,18 +202,61 @@ The application is designed to work with the following Google Sheet tabs:
 - **Column D**: LOA Start Date - Start date of leave
 - **Column E**: LOA End Date - End date of leave
 
-## Deployment to Vercel
+## Deployment
+
+### Using Railway-Hosted Backend (Quick Setup)
+
+**If you already have a backend deployed on Railway:**
+
+**Your Railway backend is at:** `https://supervisortasks-production.up.railway.app`
+
+1. Configure the frontend:
+   ```bash
+   cd frontend
+   cp .env.example .env.local
+   # Edit .env.local and set:
+   # NEXT_PUBLIC_API_URL=https://supervisortasks-production.up.railway.app
+   ```
+
+2. Run the frontend:
+   ```bash
+   npm run dev
+   ```
+
+4. Open http://localhost:3000 - it will connect to your Railway backend!
+
+**For detailed Railway setup instructions, see [RAILWAY_SETUP.md](RAILWAY_SETUP.md)**
+
+### Deployment to Vercel (Frontend)
 
 This Next.js application is optimized for deployment on Vercel:
 
 1. Push your code to GitHub
 2. Import the repository in Vercel
-3. Configure the root directory to `frontend`
-4. Deploy
+3. Configure the project:
+   - **Root Directory**: `frontend`
+   - **Framework**: Next.js
+   - **Build Command**: `npm run build`
+4. Add environment variable:
+   - **Key**: `NEXT_PUBLIC_API_URL`
+   - **Value**: `https://supervisortasks-production.up.railway.app`
+5. Deploy!
 
-Vercel will automatically detect the Next.js framework and configure the build settings.
+### Backend CORS Configuration
 
-## Contributing
+Make sure your Railway backend has the correct CORS configuration:
+
+1. In Railway, go to your backend service
+2. Add/update environment variable:
+   ```
+   FRONTEND_URL=https://your-frontend.vercel.app
+   ```
+3. For multiple origins (local + production):
+   ```
+   FRONTEND_URL=https://your-frontend.vercel.app,http://localhost:3000
+   ```
+
+## Google Sheets Structure
 
 1. Create a feature branch
 2. Make your changes
