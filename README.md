@@ -1,96 +1,85 @@
 # Supervisor Tasks Management Dashboard
 
-A modern web dashboard for managing supervisor tasks, discussions, feedback, and leave of absence tracking, built with Next.js and ready for Google Sheets integration.
+A modern, full-stack web application for managing supervisor tasks, discussions, feedback, and leave of absence tracking. Built with Next.js, Express.js, TypeScript, and Google Sheets integration.
 
-## Features
+## 🚀 Features
 
-- **Task Management**: View and track tasks with status updates and due dates
-- **Discussion Feedback**: Track discussions and supervisor responses
-- **Supervisor Management**: View supervisors and their LOA status
-- **Conditional Formatting**: Overdue tasks highlighted in red
-- **Status Badges**: Color-coded status indicators for quick visual reference
+- **Task Management**: Create, read, update, and delete tasks with automatic due date calculation
+- **Discussion Tracking**: Monitor discussions and supervisor feedback responses
+- **Supervisor Management**: View supervisors and manage their LOA (Leave of Absence) status
+- **Task Rotation**: Fair distribution of tasks based on supervisor availability
+- **Real-time Sync**: Two-way synchronization with Google Sheets
+- **Modern UI**: Beautiful, responsive design with Tailwind CSS and shadcn/ui components
+- **Type-Safe**: Full TypeScript implementation across frontend and backend
 
-## Tech Stack
+## 📋 Tech Stack
 
 ### Frontend
-- Next.js 16 with App Router
-- TypeScript for type safety
-- Tailwind CSS v4 for styling
-- shadcn/ui components
-- Lucide React icons
+- **Framework**: Next.js 16 with App Router
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS v4
+- **Components**: shadcn/ui
+- **Icons**: Lucide React
+- **Deployment**: Vercel
 
-## Prerequisites
+### Backend
+- **Framework**: Express.js
+- **Language**: TypeScript
+- **Database**: Google Sheets API
+- **Security**: Helmet, CORS, Rate Limiting
+- **Validation**: Zod
+- **Deployment**: Railway
 
-- Node.js 18+ and npm 9+
-- (Future) Google Cloud Project with Sheets API enabled
-- (Future) Service account credentials for Google Sheets API
+## 🏗️ Project Structure
 
-## Testing Without Backend
-
-**Note**: This application is designed to run on **Railway (backend) + Vercel (frontend)**, not locally.
-
-### Cloud-Hosted Architecture
-
-- **Backend**: Railway with Google Sheets **two-way sync** (read AND write)
-- **Frontend**: Vercel
-- **Data**: Google Sheets (persistent storage)
-
-### Primary Testing Method
-
-Access your deployed application:
 ```
-https://your-app.vercel.app
+supervisortasks/
+├── packages/
+│   ├── frontend/              # Next.js application
+│   │   ├── src/
+│   │   │   ├── app/          # Next.js App Router pages
+│   │   │   │   ├── page.tsx              # Tasks dashboard
+│   │   │   │   ├── discussions/          # Discussions page
+│   │   │   │   └── supervisors/          # Supervisors page
+│   │   │   ├── components/   # React components
+│   │   │   │   ├── ui/                   # shadcn/ui components
+│   │   │   │   └── Sidebar.tsx           # Navigation
+│   │   │   ├── lib/          # Utilities, API client, mock data
+│   │   │   └── types/        # TypeScript types
+│   │   ├── package.json
+│   │   ├── tsconfig.json
+│   │   └── vercel.json
+│   │
+│   └── backend/               # Express.js API
+│       ├── src/
+│       │   ├── services/     # Business logic & Google Sheets
+│       │   ├── routes/       # API endpoints
+│       │   ├── middleware/   # Error handling
+│       │   ├── types/        # TypeScript types
+│       │   └── index.ts      # Server entry point
+│       ├── package.json
+│       ├── tsconfig.json
+│       └── Dockerfile
+│
+├── .env.example               # Environment variables template
+├── docker-compose.yml         # Docker configuration
+├── package.json               # Root workspace config
+└── README.md                  # This file
 ```
 
-All CRUD operations (Create, Read, Update, Delete) work with full Google Sheets synchronization.
+## 🎯 Prerequisites
 
-### Mock Data Fallback
+- Node.js 20.9.0 or higher
+- npm 9.0.0 or higher
+- Google Cloud Project with Sheets API enabled
+- Google Service Account with access to your spreadsheet
 
-If Railway backend is temporarily unavailable, the frontend automatically uses **read-only** mock data for UI testing. See **[TESTING.md](TESTING.md)** for complete testing guide.
-
-**Important**: Mock data is read-only. For full two-way Google Sheets synchronization, use the deployed Railway backend.
-
-## Setup Instructions
-
-### Quick Start (With Railway Backend)
-
-**If you already have a backend deployed on Railway:**
-
-1. Clone and install:
-   ```bash
-   git clone <repository-url>
-   cd supervisortasks
-   npm install
-   ```
-
-2. Configure frontend to use your Railway backend:
-   ```bash
-   cd frontend
-   cp .env.example .env.local
-   ```
-   
-3. Edit `frontend/.env.local` and set your Railway backend URL:
-   ```env
-   NEXT_PUBLIC_API_URL=https://supervisortasks-production.up.railway.app
-   ```
-
-4. Start the frontend:
-   ```bash
-   npm run dev
-   ```
-
-5. Open http://localhost:3000 - Your app will load data from Railway! 🚀
-
-**For detailed Railway setup and troubleshooting, see [RAILWAY_SETUP.md](RAILWAY_SETUP.md)**
-
----
-
-### Full Setup (Local Development with Backend)
+## 🔧 Setup
 
 ### 1. Clone the Repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/riskecrp/supervisortasks.git
 cd supervisortasks
 ```
 
@@ -100,233 +89,241 @@ cd supervisortasks
 npm install
 ```
 
-### 3. Configure Backend (Optional - if running locally)
+This will install dependencies for both frontend and backend workspaces.
 
-See [QUICKSTART.md](QUICKSTART.md) for detailed backend setup instructions with Google Sheets.
+### 3. Configure Environment Variables
 
-### 4. Run the Application
+#### Backend Configuration
 
-#### Development Mode
+Create `packages/backend/.env`:
+
+```env
+# Google Sheets Configuration
+GOOGLE_SHEET_ID=your_spreadsheet_id
+GOOGLE_SERVICE_ACCOUNT_EMAIL=your-service-account@project.iam.gserviceaccount.com
+GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYour private key\n-----END PRIVATE KEY-----\n"
+
+# Server Configuration
+PORT=3001
+NODE_ENV=development
+FRONTEND_URL=http://localhost:3000
+
+# Rate Limiting
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
+```
+
+#### Frontend Configuration
+
+Create `packages/frontend/.env.local`:
+
+```env
+# Backend API URL
+NEXT_PUBLIC_API_URL=http://localhost:3001
+```
+
+### 4. Google Sheets Setup
+
+Your Google Sheet should have the following tabs:
+
+#### Names Tab
+- Column A: Supervisor Names
+
+#### Tasks Tab
+- Column A: Task List (description)
+- Column B: Task Owner (supervisor name)
+- Column C: Status (Not Started, In Progress, Completed, Blocked)
+- Column D: Claimed/Assigned Date
+- Column E: Due Date (auto-calculated: assigned date + 5 days)
+- Column F: Completed Date (set when status = Completed)
+- Column G: Notes
+
+#### Discussions Pending Feedback Tab
+- Column A: Date Posted
+- Column B: Topic
+- Column C: Direct Link
+- Columns D+: Supervisor columns (TRUE/FALSE for responses)
+
+#### Task Rotation Tab
+- Column A: Employee Name
+- Column B: Rank
+- Column C: LOA? (TRUE/FALSE)
+- Column D: LOA Start Date
+- Column E: LOA End Date
+
+### 5. Share Google Sheet with Service Account
+
+Share your Google Sheet with the service account email from your configuration.
+
+## 🚀 Running the Application
+
+### Development Mode
+
+Run both frontend and backend concurrently:
 
 ```bash
+npm run dev:all
+```
+
+Or run them separately:
+
+```bash
+# Terminal 1 - Backend
+npm run dev:backend
+
+# Terminal 2 - Frontend
 npm run dev
 ```
 
-The application will be available at http://localhost:3000
+Access the application at:
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:3001
+- Health Check: http://localhost:3001/health
 
-#### Production Build
+### Production Build
 
 ```bash
+# Build both applications
 npm run build
-npm start
+
+# Start backend
+npm run start:backend
+
+# Start frontend (in another terminal)
+npm run start
 ```
 
-## Project Structure
+### Docker
 
-```
-supervisortasks/
-├── frontend/                 # Next.js application
-│   ├── src/
-│   │   ├── app/             # Next.js App Router pages
-│   │   │   ├── page.tsx     # Tasks page (/)
-│   │   │   ├── discussions/ # Discussions page
-│   │   │   └── supervisors/ # Supervisors page
-│   │   ├── components/      # React components
-│   │   │   ├── ui/          # shadcn/ui components
-│   │   │   └── Sidebar.tsx  # Navigation sidebar
-│   │   ├── lib/             # Utilities, API client, and mock data
-│   │   └── types/           # TypeScript type definitions
-│   └── package.json
-├── backend/                  # Express API with Google Sheets integration
-│   │                         # (Can be deployed to Railway)
-│   ├── src/
-│   │   ├── services/        # Google Sheets service, business logic
-│   │   ├── routes/          # API endpoints
-│   │   └── index.ts         # Server entry point
-│   └── package.json
-└── package.json             # Root package.json
+Run with Docker Compose:
+
+```bash
+# Create .env file with your configuration
+cp .env.example .env
+
+# Start services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
 ```
 
-## Current Features
+## 🌐 Deployment
 
-### Backend Integration
-
-- **API Client**: Connects to Railway-hosted backend or local backend
-- **Real-time Data**: Fetches tasks, discussions, and supervisors from Google Sheets via API
-- **Graceful Fallback**: Uses mock data if backend is unavailable
-- **Loading States**: Shows loading indicators while fetching data
-- **Error Handling**: Displays warnings when backend connection fails
-
-### Pages
-
-1. **Tasks Page (`/`)**
-   - Display tasks in a table format
-   - Columns: Task List, Task Owner, Status, Claimed/Assigned Date, Due Date, Completed Date, Notes
-   - Soft, muted status badges (In Progress, Not Started, Completed, Blocked)
-   - Subtle amber highlighting for overdue tasks
-   - Fetches from backend API with fallback to mock data
-
-2. **Discussions Page (`/discussions`)**
-   - Display discussion topics
-   - Columns: Date Posted, Topic, Direct Link, Supervisor Responses
-   - Response count badges with muted colors
-   - Fetches from backend API with fallback to mock data
-
-3. **Supervisors Page (`/supervisors`)**
-   - Display supervisor information
-   - Columns: Name, Rank, LOA Status, LOA Start Date, LOA End Date
-   - Active/On Leave status badges with soft colors
-   - Fetches from backend API with fallback to mock data
-
-### Navigation
-
-- Sidebar navigation with active page highlighting
-- Clean, modern UI with dark mode support
-
-## Next Steps
-
-The foundational UI is complete. Future development will include:
-
-1. **Google Sheets Integration**
-   - Connect to Google Sheets API
-   - Implement two-way synchronization
-   - Real-time data updates
-
-2. **CRUD Operations**
-   - Add, edit, and delete tasks
-   - Manage discussions
-   - Update supervisor information
-
-3. **Deployment**
-   - Deploy frontend to Vercel
-   - Set up backend API for Google Sheets integration
-
-## Google Sheets Structure
-
-The application is designed to work with the following Google Sheet tabs:
-
-### Tasks Sheet
-- **Column A**: Task List - Description of the task
-- **Column B**: Task Owner - Name of the supervisor assigned to the task
-- **Column C**: Status - Current status (Not Started, In Progress, Completed, Blocked)
-- **Column D**: Claimed/Assigned Date - Date the task was claimed or assigned
-- **Column E**: Due Date - Target completion date
-- **Column F**: Completed Date - Date task was completed  
-- **Column G**: Notes - Additional notes about the task
-
-### Discussions Pending Feedback Sheet
-- **Column A**: Date Posted
-- **Column B**: Topic
-- **Column C**: Direct Link
-- **Columns D+**: Dynamic supervisor columns (TRUE/FALSE for feedback status)
-
-### Task Rotation Sheet
-- **Column A**: Employee Name - Supervisor name
-- **Column B**: Rank - Supervisor rank/title
-- **Column C**: LOA? - Leave of Absence status (TRUE/FALSE)
-- **Column D**: LOA Start Date - Start date of leave
-- **Column E**: LOA End Date - End date of leave
-
-## Deployment
-
-### Using Railway-Hosted Backend (Quick Setup)
-
-**If you already have a backend deployed on Railway:**
-
-**Your Railway backend is at:** `https://supervisortasks-production.up.railway.app`
-
-1. Configure the frontend:
-   ```bash
-   cd frontend
-   cp .env.example .env.local
-   # Edit .env.local and set:
-   # NEXT_PUBLIC_API_URL=https://supervisortasks-production.up.railway.app
-   ```
-
-2. Run the frontend:
-   ```bash
-   npm run dev
-   ```
-
-4. Open http://localhost:3000 - it will connect to your Railway backend!
-
-**For detailed Railway setup instructions, see [RAILWAY_SETUP.md](RAILWAY_SETUP.md)**
-
-### Deployment to Vercel (Frontend)
-
-This Next.js application is optimized for deployment on Vercel:
+### Frontend (Vercel)
 
 1. Push your code to GitHub
-2. Import the repository in Vercel
-3. Configure the project:
-   - **Root Directory**: `frontend`
+2. Import repository in Vercel
+3. Configure:
+   - **Root Directory**: Leave empty (monorepo auto-detected)
    - **Framework**: Next.js
-   - **Build Command**: `npm run build`
+   - **Build Command**: `cd packages/frontend && npm run build`
+   - **Output Directory**: `packages/frontend/.next`
 4. Add environment variable:
-   - **Key**: `NEXT_PUBLIC_API_URL`
-   - **Value**: `https://supervisortasks-production.up.railway.app`
+   - `NEXT_PUBLIC_API_URL`: Your Railway backend URL
 5. Deploy!
 
-### Railway Backend Environment Variables
+### Backend (Railway)
 
-**⚠️ Important**: Your Railway backend needs these environment variables to work:
+1. Create new project in Railway
+2. Connect your GitHub repository
+3. Configure:
+   - **Root Directory**: `packages/backend`
+   - **Build Command**: `npm run build`
+   - **Start Command**: `npm start`
+4. Add environment variables:
+   - `NODE_ENV`: `production`
+   - `PORT`: `3001` (or Railway's PORT)
+   - `GOOGLE_SHEET_ID`: Your spreadsheet ID
+   - `GOOGLE_SERVICE_ACCOUNT_EMAIL`: Service account email
+   - `GOOGLE_PRIVATE_KEY`: Service account private key
+   - `FRONTEND_URL`: Your Vercel frontend URL
+5. Deploy!
 
-**Quick Reference**: See [RAILWAY_QUICK_REFERENCE.md](RAILWAY_QUICK_REFERENCE.md)  
-**Detailed Guide**: See [RAILWAY_ENV_VARIABLES.md](RAILWAY_ENV_VARIABLES.md)
+## 📡 API Endpoints
 
-**Required Variables**:
+### Tasks
+- `GET /api/tasks` - Get all tasks
+- `GET /api/tasks/:id` - Get task by ID
+- `POST /api/tasks` - Create new task
+- `PUT /api/tasks/:id` - Update task
+- `DELETE /api/tasks/:id` - Delete task
+
+### Discussions
+- `GET /api/discussions` - Get all discussions
+- `GET /api/discussions/:id` - Get discussion by ID
+- `POST /api/discussions` - Create new discussion
+- `PUT /api/discussions/:id` - Update discussion
+- `DELETE /api/discussions/:id` - Delete discussion
+
+### Supervisors
+- `GET /api/supervisors` - Get all supervisors
+- `GET /api/supervisors/:id` - Get supervisor by ID
+- `POST /api/supervisors` - Add new supervisor
+- `PUT /api/supervisors/:id` - Update supervisor
+- `DELETE /api/supervisors/:id` - Remove supervisor
+
+### LOA (Leave of Absence)
+- `GET /api/loa` - Get all LOA records
+- `POST /api/loa` - Create LOA record
+- `PUT /api/loa/:id` - Update LOA record
+- `DELETE /api/loa/:id` - Delete LOA record
+
+### Analytics
+- `GET /api/analytics` - Get dashboard analytics
+- `GET /api/analytics/task-distribution` - Get task distribution by supervisor
+
+## 🛠️ Development
+
+### Available Scripts
+
 ```bash
-NODE_ENV=production                      # ✅ You have this
-GOOGLE_SHEET_ID=your_sheet_id           # ⚠️ Need to add
-GOOGLE_SERVICE_ACCOUNT_EMAIL=...        # ⚠️ Need to add
-GOOGLE_PRIVATE_KEY="-----BEGIN..."      # ⚠️ Need to add
-FRONTEND_URL=https://your-app.vercel.app # 📝 Recommended
+# Development
+npm run dev              # Start frontend only
+npm run dev:backend      # Start backend only
+npm run dev:all          # Start both concurrently
+
+# Building
+npm run build            # Build both
+npm run build:frontend   # Build frontend only
+npm run build:backend    # Build backend only
+
+# Production
+npm start                # Start frontend
+npm run start:backend    # Start backend
+
+# Linting & Type Checking
+npm run lint             # Lint frontend
+npm run typecheck        # Type check backend
 ```
 
-For step-by-step instructions on getting Google credentials and setting these variables in Railway, see:
-- **[RAILWAY_QUICK_REFERENCE.md](RAILWAY_QUICK_REFERENCE.md)** - Quick copy-paste template
-- **[RAILWAY_ENV_VARIABLES.md](RAILWAY_ENV_VARIABLES.md)** - Complete guide with troubleshooting
-
-### Backend CORS Configuration
-
-Make sure your Railway backend has the correct CORS configuration:
-
-1. In Railway, go to your backend service
-2. Add/update environment variable:
-   ```
-   FRONTEND_URL=https://your-frontend.vercel.app
-   ```
-3. For multiple origins (local + production):
-   ```
-   FRONTEND_URL=https://your-frontend.vercel.app,http://localhost:3000
-   ```
-
-## Google Sheets Structure
+### Adding New Features
 
 1. Create a feature branch
-2. Make your changes
-3. Test thoroughly
+2. Make your changes in the appropriate workspace
+3. Test thoroughly (frontend and backend)
 4. Submit a pull request
 
-## License
+## 🤝 Contributing
 
-[Your License Here]
+See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
 
-## Support
+## 📄 License
 
-For issues or questions, please open an issue on GitHub.
+This project is licensed under the terms specified in the [LICENSE](LICENSE) file.
 
-## Contributing
+## 🆘 Support
 
-1. Create a feature branch
-2. Make your changes
-3. Test thoroughly
-4. Submit a pull request
+For issues, questions, or feature requests, please open an issue on GitHub.
 
-## License
+## 📝 Notes
 
-[Your License Here]
-
-## Support
-
-For issues or questions, please open an issue on GitHub.
+- The application uses Google Sheets as its database for easy data management
+- Two-way sync ensures data consistency between the app and Google Sheets
+- Mock data fallback is available when backend is unavailable (read-only)
+- The UI features conditional formatting (overdue tasks highlighted)
+- Automatic due date calculation (5 days after claimed/assigned date)
+- Status-based workflow (automatic completion date when task marked complete)

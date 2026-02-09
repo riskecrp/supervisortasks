@@ -1,19 +1,28 @@
 {
   "name": "supervisortasks",
   "version": "1.0.0",
-  "description": "Web dashboard for managing supervisor tasks, discussions, and feedback",
+  "description": "Modern web application for managing supervisor tasks with Google Sheets integration",
   "private": true,
   "workspaces": [
-    "frontend"
+    "packages/*"
   ],
   "scripts": {
-    "dev": "npm run dev --workspace=frontend",
-    "build": "npm run build --workspace=frontend",
-    "start": "npm run start --workspace=frontend",
-    "lint": "npm run lint --workspace=frontend"
+    "dev": "npm run dev --workspace=packages/frontend",
+    "dev:backend": "npm run dev --workspace=packages/backend",
+    "dev:all": "concurrently \"npm run dev:backend\" \"npm run dev\"",
+    "build": "npm run build --workspace=packages/backend && npm run build --workspace=packages/frontend",
+    "build:backend": "npm run build --workspace=packages/backend",
+    "build:frontend": "npm run build --workspace=packages/frontend",
+    "start": "npm run start --workspace=packages/frontend",
+    "start:backend": "npm run start --workspace=packages/backend",
+    "lint": "npm run lint --workspace=packages/frontend",
+    "typecheck": "npm run typecheck --workspace=packages/backend"
   },
   "engines": {
     "node": ">=20.9.0",
     "npm": ">=9.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
   }
 }
