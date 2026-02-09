@@ -18,9 +18,6 @@ export class DiscussionsService {
       return [];
     }
 
-    // Get supervisor names from the Names tab
-    const supervisors = await this.getSupervisorsFromDiscussions();
-
     // Filter out empty rows (skip header row)
     const dataRows = rows.slice(1).filter(row => {
       // Check if all values are empty/null/undefined
@@ -32,12 +29,13 @@ export class DiscussionsService {
       return !allEmpty && !topicEmpty;
     });
 
+    // Get the headers from the Discussions sheet to map columns
+    // Note: These should match the full names from the Names tab
+    const headers = rows[0];
+    const discussionSupervisors = headers.slice(3).map(h => h ? h.toString().trim() : '').filter(Boolean);
+
     return dataRows.map((row, index) => {
       const supervisorFeedback: Record<string, boolean> = {};
-      
-      // Get the headers from the Discussions sheet to map columns
-      const headers = rows[0];
-      const discussionSupervisors = headers.slice(3).map(h => h ? h.toString().trim() : '').filter(Boolean);
       
       discussionSupervisors.forEach((supervisor, i) => {
         if (supervisor) {
