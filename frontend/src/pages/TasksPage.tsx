@@ -139,7 +139,7 @@ const TasksPage = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Tasks</h1>
@@ -164,8 +164,8 @@ const TasksPage = () => {
         </label>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 w-full">
-        <div className="px-6 py-4 border-b border-gray-200">
+      <div className="bg-white rounded-lg shadow-md border border-gray-200 w-full min-h-[600px] p-6">
+        <div className="pb-4 border-b border-gray-200 mb-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900">Task List</h3>
             <div className="flex items-center gap-3">
@@ -191,7 +191,7 @@ const TasksPage = () => {
             </div>
           </div>
         </div>
-        <div className="w-full">
+        <div className="w-full overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
