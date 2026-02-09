@@ -1,7 +1,6 @@
 import { SheetsService } from './sheets.service';
 import { LOARecord } from '../types';
 
-const LOA_SHEET = 'LOA Tracking';
 const TASK_ROTATION_SHEET = 'Task Rotation';
 
 export class LOAService {
@@ -12,27 +11,24 @@ export class LOAService {
   }
 
   async getAllLOARecords(): Promise<LOARecord[]> {
-    try {
-      console.log(`Reading all LOA records from ${LOA_SHEET}...`);
-      const rows = await this.sheetsService.readRange(`${LOA_SHEET}!A2:E`);
-      console.log(`Found ${rows.length} LOA record rows`);
-      
-      return rows.map((row, index) => ({
-        id: `loa-${index + 2}`,
-        supervisorName: row[0] || '',
-        startDate: row[1] || '',
-        endDate: row[2] || '',
-        reason: row[3] || '',
-        status: (row[4] as any) || 'Active',
-      }));
-    } catch (error: any) {
-      console.error('Failed to get LOA records:', {
-        error: error.message,
-        stack: error.stack,
-        sheet: LOA_SHEET,
-      });
-      return [];
-    }
+    const rows = await this.readTaskRotation();
+    return rows
+      .map((row, index) => {
+        const supervisorName = row[0] || '';
+        const loaFlag = row[2] === 'TRUE' || row[2] === true;
+        const startDate = row[3] || '';
+        const endDate = row[4] || '';
+        if (!supervisorName || !loaFlag) return null;
+        return {
+          id: `loa-${index + 2}`,
+          supervisorName,
+          startDate,
+          endDate,
+          reason: '',
+          status: 'Active' as LOARecord['status'],
+        };
+      })
+      .filter((r): r is LOARecord => r !== null);
   }
 
   async getLOARecord(id: string): Promise<LOARecord | null> {
@@ -45,74 +41,19 @@ export class LOAService {
       supervisorName: record.supervisorName,
       startDate: record.startDate,
       endDate: record.endDate,
-      status: record.status || 'Active',
-      // Reason omitted for privacy
     });
 
-    const newRow = [
-      record.supervisorName,
-      record.startDate,
-      record.endDate,
-      record.reason,
-      record.status || 'Active',
-    ];
+    await this.updateTaskRotationRow(record.supervisorName, {
+      loa: true,
+      startDate: record.startDate,
+      endDate: record.endDate,
+    });
 
-    try {
-      console.log(`Attempting to append to ${LOA_SHEET} sheet...`);
-      await this.sheetsService.appendRange(`${LOA_SHEET}!A:E`, [newRow]);
-      console.log('Successfully appended LOA record to sheet');
-    } catch (error: any) {
-      // If sheet doesn't exist, create it first
-      console.error('Failed to append LOA record, attempting to create header row:', {
-        error: error.message,
-        sheet: LOA_SHEET,
-        stack: error.stack,
-        // Data omitted for privacy
-      });
-      
-      try {
-        console.log(`Creating header row for ${LOA_SHEET} sheet...`);
-        await this.sheetsService.writeRange(`${LOA_SHEET}!A1:E1`, [
-          ['Supervisor Name', 'Start Date', 'End Date', 'Reason', 'Status']
-        ]);
-        console.log('Header row created successfully');
-        
-        console.log('Retrying append operation...');
-        await this.sheetsService.appendRange(`${LOA_SHEET}!A:E`, [newRow]);
-        console.log('Successfully appended LOA record after creating header');
-      } catch (retryError: any) {
-        console.error('Failed to create LOA record after retry:', {
-          error: retryError.message,
-          stack: retryError.stack,
-          sheet: LOA_SHEET,
-          // Data omitted for privacy
-        });
-        throw new Error(`Failed to create LOA record: ${retryError.message}`);
-      }
-    }
-    
-    // Sync to Task Rotation tab
-    try {
-      console.log('Syncing LOA data to Task Rotation sheet...');
-      await this.syncToTaskRotation();
-      console.log('Successfully synced to Task Rotation sheet');
-    } catch (syncError: any) {
-      console.error('Failed to sync to Task Rotation sheet (non-fatal):', {
-        error: syncError.message,
-        stack: syncError.stack,
-      });
-      // Don't throw - this is a secondary operation
-    }
-    
-    console.log('Fetching updated LOA records...');
     const records = await this.getAllLOARecords();
-    const newRecord = records[records.length - 1];
-    
+    const newRecord = records.find(r => r.supervisorName === record.supervisorName);
     if (!newRecord) {
-      throw new Error('Failed to create LOA record: Record not found after creation');
+      throw new Error('Failed to create LOA record: supervisor not found in Task Rotation');
     }
-    
-    console.log('LOA record created successfully with ID:', newRecord.id);
     return newRecord;
   }
 
@@ -132,74 +73,30 @@ export class LOAService {
     }
 
     const updatedRecord = { ...currentRecord, ...updates };
-    
-    const updatedRow = [
-      updatedRecord.supervisorName,
-      updatedRecord.startDate,
-      updatedRecord.endDate,
-      updatedRecord.reason,
-      updatedRecord.status,
-    ];
+    const makeActive = updatedRecord.status !== 'Completed';
 
-    try {
-      console.log(`Writing updated LOA record to row ${rowNumber}...`);
-      await this.sheetsService.writeRange(`${LOA_SHEET}!A${rowNumber}:E${rowNumber}`, [updatedRow]);
-      console.log('Successfully updated LOA record');
-    } catch (error: any) {
-      console.error('Failed to update LOA record:', {
-        error: error.message,
-        stack: error.stack,
-        id,
-        rowNumber,
-        // Data omitted for privacy
-      });
-      throw new Error(`Failed to update LOA record: ${error.message}`);
-    }
-    
-    // Sync to Task Rotation tab
-    try {
-      console.log('Syncing to Task Rotation after update...');
-      await this.syncToTaskRotation();
-    } catch (syncError: any) {
-      console.error('Failed to sync after update (non-fatal):', syncError.message);
-    }
-    
+    await this.updateTaskRotationRow(updatedRecord.supervisorName, {
+      loa: makeActive,
+      startDate: makeActive ? updatedRecord.startDate : '',
+      endDate: makeActive ? updatedRecord.endDate : '',
+    });
+
     return updatedRecord;
   }
 
   async deleteLOARecord(id: string): Promise<void> {
     const rowNumber = parseInt(id.split('-')[1]);
     console.log(`Deleting LOA record at row ${rowNumber}...`);
-    
-    try {
-      const allRows = await this.sheetsService.readRange(`${LOA_SHEET}!A:E`);
-      console.log(`Total rows before delete: ${allRows.length}`);
-      
-      allRows.splice(rowNumber - 1, 1);
-      console.log(`Total rows after delete: ${allRows.length}`);
-      
-      await this.sheetsService.clearRange(`${LOA_SHEET}!A2:E`);
-      if (allRows.length > 1) {
-        await this.sheetsService.writeRange(`${LOA_SHEET}!A2:E`, allRows.slice(1));
-      }
-      console.log('Successfully deleted LOA record');
-    } catch (error: any) {
-      console.error('Failed to delete LOA record:', {
-        error: error.message,
-        stack: error.stack,
-        id,
-        rowNumber,
-      });
-      throw new Error(`Failed to delete LOA record: ${error.message}`);
+    const currentRecord = await this.getLOARecord(id);
+    if (!currentRecord) {
+      throw new Error('LOA record not found');
     }
-    
-    // Sync to Task Rotation tab
-    try {
-      console.log('Syncing to Task Rotation after delete...');
-      await this.syncToTaskRotation();
-    } catch (syncError: any) {
-      console.error('Failed to sync after delete (non-fatal):', syncError.message);
-    }
+
+    await this.updateTaskRotationRow(currentRecord.supervisorName, {
+      loa: false,
+      startDate: '',
+      endDate: '',
+    });
   }
 
   async getActiveLOA(): Promise<LOARecord[]> {
@@ -207,72 +104,62 @@ export class LOAService {
     return allRecords.filter(record => record.status === 'Active');
   }
 
-  async syncToTaskRotation(): Promise<void> {
+  private async readTaskRotation(): Promise<any[][]> {
     try {
-      console.log(`Reading Task Rotation sheet: ${TASK_ROTATION_SHEET}...`);
-      // Read all supervisors from Task Rotation sheet
-      const taskRotationRows = await this.sheetsService.readRange(`${TASK_ROTATION_SHEET}!A2:E`);
-      console.log(`Found ${taskRotationRows.length} rows in Task Rotation sheet`);
-      
-      // Get all active LOA records
-      console.log('Fetching active LOA records...');
-      const activeLOARecords = await this.getActiveLOA();
-      console.log(`Found ${activeLOARecords.length} active LOA records`);
-      
-      // Create a map of supervisor names to LOA records
-      const loaMap = new Map<string, LOARecord>();
-      activeLOARecords.forEach(loa => {
-        loaMap.set(loa.supervisorName, loa);
-      });
-      console.log(`Mapped ${loaMap.size} supervisors with active LOA`);
-      
-      // Update Task Rotation rows
-      let activeLOACount = 0;
-      const updatedRows = taskRotationRows.map(row => {
-        const supervisorName = row[0] || '';
-        const rank = row[1] || '';
-        
-        const loaRecord = loaMap.get(supervisorName);
-        
-        if (loaRecord) {
-          // Supervisor has active LOA
-          activeLOACount++;
-          return [
-            supervisorName,
-            rank,
-            'TRUE',
-            loaRecord.startDate,
-            loaRecord.endDate,
-          ];
-        } else {
-          // No active LOA
-          return [
-            supervisorName,
-            rank,
-            'FALSE',
-            '',
-            '',
-          ];
-        }
-      });
-      console.log(`Updated ${activeLOACount} supervisors to LOA=TRUE`);
-      
-      // Write back to Task Rotation sheet
-      if (updatedRows.length > 0) {
-        const range = `${TASK_ROTATION_SHEET}!A2:E${updatedRows.length + 1}`;
-        console.log(`Writing ${updatedRows.length} updated rows to ${range}...`);
-        await this.sheetsService.writeRange(range, updatedRows);
-        console.log('Successfully synced LOA data to Task Rotation sheet');
-      } else {
-        console.log('No rows to update in Task Rotation sheet');
-      }
+      const rows = await this.sheetsService.readRange(`${TASK_ROTATION_SHEET}!A:E`);
+      return rows.slice(1); // exclude header
     } catch (error: any) {
-      console.error('Failed to sync to Task Rotation sheet:', {
-        error: error.message,
-        stack: error.stack,
-        sheet: TASK_ROTATION_SHEET,
-      });
-      // Don't throw error - this is a secondary operation
+      console.error('Failed to read Task Rotation sheet:', error.message);
+      return [];
+    }
+  }
+
+  private async updateTaskRotationRow(
+    supervisorName: string,
+    data: { loa: boolean; startDate: string; endDate: string }
+  ): Promise<void> {
+    try {
+      // Read all rows including header
+      let rows: any[][] = [];
+      try {
+        rows = await this.sheetsService.readRange(`${TASK_ROTATION_SHEET}!A:E`);
+      } catch (err) {
+        // Sheet missing; create header
+        await this.sheetsService.writeRange(`${TASK_ROTATION_SHEET}!A1:E1`, [
+          ['Employee Name', 'Rank', 'LOA?', 'LOA Start Date', 'LOA End Date'],
+        ]);
+        rows = [['Employee Name', 'Rank', 'LOA?', 'LOA Start Date', 'LOA End Date']];
+      }
+
+      if (rows.length === 0) {
+        rows = [['Employee Name', 'Rank', 'LOA?', 'LOA Start Date', 'LOA End Date']];
+      }
+
+      const bodyRows = rows.slice(1);
+      let targetIndex = bodyRows.findIndex(row => (row[0] || '').toString().trim() === supervisorName);
+
+      // If supervisor missing, append new row
+      if (targetIndex === -1) {
+        const newRow = [supervisorName, '', data.loa ? 'TRUE' : 'FALSE', data.startDate, data.endDate];
+        await this.sheetsService.appendRange(`${TASK_ROTATION_SHEET}!A:E`, [newRow]);
+        return;
+      }
+
+      // Update existing row
+      const rowNumber = targetIndex + 2; // account for header
+      const row = bodyRows[targetIndex];
+      const updatedRow = [
+        row[0] || supervisorName,
+        row[1] || '',
+        data.loa ? 'TRUE' : 'FALSE',
+        data.startDate || '',
+        data.endDate || '',
+      ];
+
+      await this.sheetsService.writeRange(`${TASK_ROTATION_SHEET}!A${rowNumber}:E${rowNumber}`, [updatedRow]);
+    } catch (error: any) {
+      console.error('Failed to update Task Rotation LOA data:', error.message);
+      throw new Error(`Failed to update LOA status: ${error.message}`);
     }
   }
 }

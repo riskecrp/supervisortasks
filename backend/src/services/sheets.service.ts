@@ -1,6 +1,13 @@
 import { google } from 'googleapis';
 import * as fs from 'fs';
 
+export class SheetAccessError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'SheetAccessError';
+  }
+}
+
 export class SheetsService {
   private sheets;
   private spreadsheetId: string;
@@ -45,7 +52,7 @@ export class SheetsService {
       return response.data.values || [];
     } catch (error: any) {
       console.error(`Error reading range ${range}:`, error.message);
-      throw new Error(`Failed to read from Google Sheets: ${error.message}`);
+      throw new SheetAccessError(`Failed to read from Google Sheets: ${error.message}`);
     }
   }
 

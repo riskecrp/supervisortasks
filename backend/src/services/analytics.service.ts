@@ -93,6 +93,12 @@ export class AnalyticsService {
     supervisors: any[],
     tasks: any[]
   ): Promise<SupervisorMetrics[]> {
+    // Normalize statuses locally so callers don't need to pre-process
+    const tasksWithNormalizedStatus = tasks.map(task => ({
+      ...task,
+      normalizedStatus: task.status ? task.status.toString().trim().toLowerCase() : ''
+    }));
+
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfWeek = new Date(now);
@@ -100,7 +106,7 @@ export class AnalyticsService {
 
     // Group tasks by supervisor once to avoid repeated filtering
     const tasksBySupervisor = new Map<string, any[]>();
-    tasks.forEach(task => {
+    tasksWithNormalizedStatus.forEach(task => {
       if (task.taskOwner && task.taskOwner.trim()) {
         const owner = task.taskOwner.trim();
         if (!tasksBySupervisor.has(owner)) {
