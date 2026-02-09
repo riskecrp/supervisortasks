@@ -67,8 +67,8 @@ export default function DiscussionsPage() {
               </TableHeader>
               <TableBody>
                 {discussions.map((discussion) => {
-                  const totalSupervisors = Object.keys(discussion.supervisorResponses).length;
-                  const responsesReceived = Object.values(discussion.supervisorResponses).filter(Boolean).length;
+                  const totalSupervisors = Object.keys(discussion.supervisorFeedback).length;
+                  const responsesReceived = Object.values(discussion.supervisorFeedback).filter(Boolean).length;
                   
                   return (
                     <TableRow key={discussion.id}>
@@ -76,7 +76,7 @@ export default function DiscussionsPage() {
                       <TableCell className="font-medium">{discussion.topic}</TableCell>
                       <TableCell>
                         <a
-                          href={discussion.directLink}
+                          href={discussion.link}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center gap-1 text-blue-600 hover:underline"
