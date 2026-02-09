@@ -3,6 +3,8 @@ import { LOAService } from '../services/loa.service';
 
 export function createLOARouter(loaService: LOAService): Router {
   const router = Router();
+  const isSheetAccessError = (message: string) =>
+    message.includes('Google Sheets') || message.includes('credentials');
 
   // Get all LOA records
   router.get('/', async (req: Request, res: Response) => {
@@ -12,11 +14,11 @@ export function createLOARouter(loaService: LOAService): Router {
     } catch (error: any) {
       console.error('Error getting LOA records:', error);
       const message = error?.message || '';
-      const isSheetAccessIssue = message.includes('Google Sheets') || message.includes('credentials');
-      
-      if (isSheetAccessIssue) {
-        // Return safe empty set instead of propagating sheet access errors
-        return res.status(200).json([]);
+      if (isSheetAccessError(message)) {
+        return res.status(503).json({
+          error: 'LOA data temporarily unavailable',
+          details: message,
+        });
       }
       
       res.status(500).json({ error: message || 'Failed to fetch LOA records' });
@@ -31,11 +33,11 @@ export function createLOARouter(loaService: LOAService): Router {
     } catch (error: any) {
       console.error('Error getting active LOA records:', error);
       const message = error?.message || '';
-      const isSheetAccessIssue = message.includes('Google Sheets') || message.includes('credentials');
-      
-      if (isSheetAccessIssue) {
-        // Return safe empty set instead of propagating sheet access errors
-        return res.status(200).json([]);
+      if (isSheetAccessError(message)) {
+        return res.status(503).json({
+          error: 'LOA data temporarily unavailable',
+          details: message,
+        });
       }
       
       res.status(500).json({ error: message || 'Failed to fetch active LOA records' });
