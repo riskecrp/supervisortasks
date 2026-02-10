@@ -1,3 +1,5 @@
+import { Task } from '@/types';
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://supervisortasks-production.up.railway.app';
 
 export class ApiError extends Error {
@@ -49,10 +51,10 @@ async function fetchApi<T>(endpoint: string, options: FetchOptions = {}): Promis
 
 export const api = {
   tasks: {
-    getAll: () => fetchApi('/api/tasks'),
-    getById: (id: string) => fetchApi(`/api/tasks/${id}`),
-    create: (task: any) => fetchApi('/api/tasks', { method: 'POST', body: task }),
-    update: (id: string, updates: any) => fetchApi(`/api/tasks/${id}`, { method: 'PUT', body: updates }),
+    getAll: () => fetchApi<Task[]>('/api/tasks'),
+    getById: (id: string) => fetchApi<Task>(`/api/tasks/${id}`),
+    create: (task: any) => fetchApi<Task>('/api/tasks', { method: 'POST', body: task }),
+    update: (id: string, updates: any) => fetchApi<Task>(`/api/tasks/${id}`, { method: 'PUT', body: updates }),
     delete: (id: string) => fetchApi(`/api/tasks/${id}`, { method: 'DELETE' }),
   },
   discussions: {

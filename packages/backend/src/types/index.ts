@@ -5,6 +5,7 @@ export interface Task {
   status: string;
   claimedDate: string;
   dueDate: string;
+  completedDate: string;
   notes: string;
 }
 
