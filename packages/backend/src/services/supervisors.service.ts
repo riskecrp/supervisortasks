@@ -1,6 +1,7 @@
 import { SheetsService } from './sheets.service';
 import { Supervisor } from '../types';
 import { DiscussionsService } from './discussions.service';
+import { TasksService } from './tasks.service';
 
 const DISCUSSIONS_SHEET = 'Discussions Pending Feedback';
 const TASK_ROTATION_SHEET = 'Task Rotation';
@@ -9,10 +10,12 @@ const TASK_ROTATION_HEADERS = ['Employee Name', 'Rank', 'LOA?', 'LOA Start Date'
 export class SupervisorsService {
   private sheetsService: SheetsService;
   private discussionsService: DiscussionsService;
+  private tasksService: TasksService;
 
-  constructor(sheetsService: SheetsService, discussionsService: DiscussionsService) {
+  constructor(sheetsService: SheetsService, discussionsService: DiscussionsService, tasksService: TasksService) {
     this.sheetsService = sheetsService;
     this.discussionsService = discussionsService;
+    this.tasksService = tasksService;
   }
 
   async getAllSupervisors(): Promise<Supervisor[]> {
@@ -42,15 +45,50 @@ export class SupervisorsService {
       });
     }
 
+    // Fetch all tasks to calculate completion metrics
+    let allTasks: any[] = [];
+    try {
+      allTasks = await this.tasksService.getAllTasks();
+    } catch (error) {
+      console.error('Failed to fetch tasks for metrics:', error);
+    }
+
+    // Calculate the date 30 days ago for monthly metrics
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
     return supervisorNames.map(name => {
       const trimmedName = name.trim();
       const rank = supervisorRanks.get(trimmedName) || '';
       const onLOA = supervisorLOAMap.get(trimmedName) || false;
+
+      // Calculate total completed tasks for this supervisor
+      const totalTasksCompleted = allTasks.filter(task => 
+        task.taskOwner.trim() === trimmedName && 
+        task.status.toLowerCase() === 'completed'
+      ).length;
+
+      // Calculate monthly completed tasks (last 30 days)
+      const monthlyTasksCompleted = allTasks.filter(task => {
+        if (task.taskOwner.trim() !== trimmedName || task.status.toLowerCase() !== 'completed') {
+          return false;
+        }
+        
+        // Use claimedDate or dueDate as the completion reference
+        const dateStr = task.claimedDate || task.dueDate;
+        if (!dateStr) return false;
+        
+        const taskDate = new Date(dateStr);
+        return taskDate >= thirtyDaysAgo;
+      }).length;
+
       return {
         name: trimmedName,
         rank,
         active: true,
         onLOA,
+        totalTasksCompleted,
+        monthlyTasksCompleted,
       };
     });
   }
@@ -118,6 +156,8 @@ export class SupervisorsService {
       rank: finalRank,
       active: true,
       onLOA: false,
+      totalTasksCompleted: 0,
+      monthlyTasksCompleted: 0,
     };
   }
 

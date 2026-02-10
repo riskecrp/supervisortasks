@@ -54,7 +54,7 @@ try {
   tasksService = new TasksService(sheetsService);
   discussionsService = new DiscussionsService(sheetsService);
   loaService = new LOAService(sheetsService);
-  supervisorsService = new SupervisorsService(sheetsService, discussionsService);
+  supervisorsService = new SupervisorsService(sheetsService, discussionsService, tasksService);
   analyticsService = new AnalyticsService(
     sheetsService,
     tasksService,

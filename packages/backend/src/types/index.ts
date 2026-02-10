@@ -21,6 +21,8 @@ export interface Supervisor {
   rank?: string;
   active: boolean;
   onLOA: boolean;
+  totalTasksCompleted: number;
+  monthlyTasksCompleted: number;
 }
 
 export interface LOARecord {

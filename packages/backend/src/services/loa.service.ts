@@ -87,16 +87,32 @@ export class LOAService {
   async deleteLOARecord(id: string): Promise<void> {
     const rowNumber = parseInt(id.split('-')[1]);
     console.log(`Deleting LOA record at row ${rowNumber}...`);
-    const currentRecord = await this.getLOARecord(id);
-    if (!currentRecord) {
-      throw new Error('LOA record not found');
-    }
+    
+    // Read the Task Rotation sheet directly to get the supervisor name
+    try {
+      const rows = await this.sheetsService.readRange(`${TASK_ROTATION_SHEET}!A:E`);
+      
+      if (rows.length < rowNumber) {
+        throw new Error('LOA record not found');
+      }
+      
+      // Get the supervisor name from the row (rowNumber - 1 because of 0-based indexing, but +1 for header = just rowNumber - 1)
+      const supervisorName = rows[rowNumber - 1][0];
+      
+      if (!supervisorName) {
+        throw new Error('LOA record not found or invalid');
+      }
 
-    await this.updateTaskRotationRow(currentRecord.supervisorName, {
-      loa: false,
-      startDate: '',
-      endDate: '',
-    });
+      // Update the row to clear LOA status and dates
+      await this.updateTaskRotationRow(supervisorName.toString().trim(), {
+        loa: false,
+        startDate: '',
+        endDate: '',
+      });
+    } catch (error: any) {
+      console.error('Failed to delete LOA record:', error.message);
+      throw new Error(`Failed to delete LOA record: ${error.message}`);
+    }
   }
 
   async getActiveLOA(): Promise<LOARecord[]> {
