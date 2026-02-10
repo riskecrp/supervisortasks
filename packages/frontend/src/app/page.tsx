@@ -21,7 +21,55 @@ function isOverdue(dueDate: string | null, completedDate: string | null): boolea
   return due < today;
 }
 
-const availableStatuses: Task['status'][] = ['Not Started', 'In Progress', 'Completed', 'Blocked'];
+function getStaleTaskThresholdDays(): number {
+  const raw = process.env.NEXT_PUBLIC_STALE_TASK_THRESHOLD_DAYS;
+  const parsed = raw ? parseInt(raw, 10) : NaN;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 5;
+}
+
+const STALE_TASK_THRESHOLD_DAYS = getStaleTaskThresholdDays();
+const MILLISECONDS_PER_DAY = 1000 * 60 * 60 * 24;
+const ROW_HIGHLIGHT_CLASS = 'bg-amber-100/60';
+
+function isStale(claimedDate: string | null, completedDate: string | null): boolean {
+  if (!claimedDate || completedDate) return false;
+  const claimed = new Date(claimedDate);
+  if (isNaN(claimed.getTime())) return false;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  claimed.setHours(0, 0, 0, 0);
+
+  const diffDays = Math.floor((today.getTime() - claimed.getTime()) / MILLISECONDS_PER_DAY);
+  return diffDays > STALE_TASK_THRESHOLD_DAYS;
+}
+
+const availableStatuses: Task['status'][] = ['Assigned', 'Not Started', 'In Progress', 'Completed', 'Blocked'];
+
+// Normalize incoming task data, keeping compatibility with legacy claimedAssignedDate
+// until all backends return claimedDate consistently.
+const normalizeTask = (
+  task: Partial<Task> & { claimedAssignedDate?: string | null }
+): Task => {
+  if (!task.id || !task.taskList || !task.taskOwner) {
+    console.warn('normalizeTask received task with missing critical fields', {
+      hasId: !!task.id,
+      hasTaskList: !!task.taskList,
+      hasTaskOwner: !!task.taskOwner,
+    });
+  }
+
+  return {
+    id: task.id || '',
+    taskList: task.taskList || '',
+    taskOwner: task.taskOwner || '',
+    status: (task.status as Task['status']) || 'Not Started',
+    claimedDate: task.claimedDate || task.claimedAssignedDate || null,
+    dueDate: task.dueDate || null,
+    completedDate: task.completedDate || null,
+    notes: task.notes || '',
+  };
+};
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>(mockTasks);
@@ -33,7 +81,8 @@ export default function TasksPage() {
     async function fetchTasks() {
       try {
         const data = await api.tasks.getAll();
-        setTasks(data as Task[]);
+        const normalized = Array.isArray(data) ? data.map(normalizeTask) : [];
+        setTasks(normalized.length ? normalized : mockTasks);
         setError(null);
       } catch (err) {
         console.error('Failed to fetch tasks:', err);
@@ -49,12 +98,19 @@ export default function TasksPage() {
 
   const handleStatusChange = async (taskId: string, newStatus: Task['status']) => {
     try {
-      await api.tasks.update(taskId, { status: newStatus });
+      const completedDate =
+        newStatus === 'Completed' ? new Date().toISOString().split('T')[0] : '';
+
+      const updated = await api.tasks.update(taskId, {
+        status: newStatus,
+        completedDate,
+      });
+      const normalized = normalizeTask(updated);
       
       // Update local state
       setTasks(prevTasks => 
         prevTasks.map(task => 
-          task.id === taskId ? { ...task, status: newStatus } : task
+          task.id === taskId ? normalized : task
         )
       );
     } catch (err) {
@@ -110,9 +166,11 @@ export default function TasksPage() {
               <TableBody>
                 {filteredTasks.map((task) => {
                   const overdue = isOverdue(task.dueDate, task.completedDate);
+                  const stale = isStale(task.claimedDate, task.completedDate);
+                  const highlight = overdue || stale;
                   return (
-                    <TableRow key={task.id} className={overdue ? 'bg-amber-50/30' : ''}>
-                      <TableCell className={overdue ? 'text-amber-900 font-medium' : ''}>
+                    <TableRow key={task.id} className={highlight ? ROW_HIGHLIGHT_CLASS : ''}>
+                      <TableCell className={highlight ? 'text-amber-900 font-semibold' : ''}>
                         {task.taskList}
                       </TableCell>
                       <TableCell>{task.taskOwner}</TableCell>
@@ -121,7 +179,7 @@ export default function TasksPage() {
                           value={task.status}
                           onChange={(e) => handleStatusChange(task.id, e.target.value as Task['status'])}
                           className="px-2 py-1 rounded border border-gray-300 bg-white text-sm"
-                        >
+                          >
                           {availableStatuses.map(status => (
                             <option key={status} value={status}>
                               {status}
@@ -129,8 +187,10 @@ export default function TasksPage() {
                           ))}
                         </select>
                       </TableCell>
-                      <TableCell>{task.claimedAssignedDate || '-'}</TableCell>
-                      <TableCell className={overdue ? 'text-amber-800' : ''}>
+                      <TableCell className={stale ? 'text-amber-900 font-medium' : ''}>
+                        {task.claimedDate || '-'}
+                      </TableCell>
+                      <TableCell className={overdue ? 'text-amber-900 font-medium' : ''}>
                         {task.dueDate || '-'}
                       </TableCell>
                       <TableCell>{task.completedDate || '-'}</TableCell>

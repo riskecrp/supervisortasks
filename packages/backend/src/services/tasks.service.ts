@@ -3,6 +3,7 @@ import { Task } from '../types';
 
 const TASKS_SHEET = 'Tasks';
 const TASK_HISTORY_SHEET = 'Task History';
+const STATUS_COMPLETED = 'Completed';
 
 export class TasksService {
   private sheetsService: SheetsService;
@@ -12,7 +13,7 @@ export class TasksService {
   }
 
   async getAllTasks(): Promise<Task[]> {
-    const rows = await this.sheetsService.readRange(`${TASKS_SHEET}!A2:F`);
+    const rows = await this.sheetsService.readRange(`${TASKS_SHEET}!A2:G`);
     
     // Track actual row numbers before filtering
     const rowsWithIndex = rows.map((row, index) => ({
@@ -38,7 +39,8 @@ export class TasksService {
       status: row[2]?.toString().trim() || 'Assigned',
       claimedDate: row[3] || '',
       dueDate: row[4] || '',
-      notes: row[5] || '',
+      completedDate: row[5] || '',
+      notes: row[6] || '',
     }));
   }
 
@@ -48,16 +50,19 @@ export class TasksService {
   }
 
   async createTask(task: Omit<Task, 'id'>): Promise<Task> {
+    const completedDate = this.resolveCompletedDate(task.status, task.completedDate);
+
     const newRow = [
       task.taskList,
       task.taskOwner || '',
       task.status || 'Assigned',
       task.claimedDate || new Date().toISOString().split('T')[0],
       task.dueDate || '',
+      completedDate,
       task.notes || '',
     ];
 
-    await this.sheetsService.appendRange(`${TASKS_SHEET}!A:F`, [newRow]);
+    await this.sheetsService.appendRange(`${TASKS_SHEET}!A:G`, [newRow]);
     
     const tasks = await this.getAllTasks();
     return tasks[tasks.length - 1];
@@ -72,9 +77,15 @@ export class TasksService {
     }
 
     const updatedTask = { ...currentTask, ...updates };
+    const isStatusChangingToCompleted = updates.status === STATUS_COMPLETED && currentTask.status !== STATUS_COMPLETED;
     
+    // Automatically set completedDate when status moves to Completed
+    if (isStatusChangingToCompleted) {
+      updatedTask.completedDate = this.resolveCompletedDate(updatedTask.status, updates.completedDate);
+    }
+
     // If status changed to Completed, add to task history
-    if (updates.status === 'Completed' && currentTask.status !== 'Completed') {
+    if (isStatusChangingToCompleted) {
       await this.addToHistory(updatedTask);
     }
 
@@ -84,10 +95,11 @@ export class TasksService {
       updatedTask.status,
       updatedTask.claimedDate,
       updatedTask.dueDate,
+      updatedTask.completedDate || '',
       updatedTask.notes,
     ];
 
-    await this.sheetsService.writeRange(`${TASKS_SHEET}!A${rowNumber}:F${rowNumber}`, [updatedRow]);
+    await this.sheetsService.writeRange(`${TASKS_SHEET}!A${rowNumber}:G${rowNumber}`, [updatedRow]);
     
     return updatedTask;
   }
@@ -96,15 +108,15 @@ export class TasksService {
     const rowNumber = parseInt(id.split('-')[1]);
     
     // Read all data
-    const allRows = await this.sheetsService.readRange(`${TASKS_SHEET}!A:F`);
+    const allRows = await this.sheetsService.readRange(`${TASKS_SHEET}!A:G`);
     
     // Remove the specific row (accounting for 0-based index)
     allRows.splice(rowNumber - 1, 1);
     
     // Clear and rewrite
-    await this.sheetsService.clearRange(`${TASKS_SHEET}!A2:F`);
+    await this.sheetsService.clearRange(`${TASKS_SHEET}!A2:G`);
     if (allRows.length > 1) {
-      await this.sheetsService.writeRange(`${TASKS_SHEET}!A2:F`, allRows.slice(1));
+      await this.sheetsService.writeRange(`${TASKS_SHEET}!A2:G`, allRows.slice(1));
     }
   }
 
@@ -118,15 +130,30 @@ export class TasksService {
       return;
     }
 
-    const completedDate = new Date().toISOString().split('T')[0];
-    const claimedDate = new Date(task.claimedDate);
-    const completedDateTime = new Date(completedDate);
+    const effectiveCompletedDate = task.completedDate && task.completedDate.trim()
+      ? task.completedDate
+      : '';
+    const claimedDate = task.claimedDate ? new Date(task.claimedDate) : null;
+    const completedDateTime = effectiveCompletedDate ? new Date(effectiveCompletedDate) : null;
+
+    if (
+      !claimedDate ||
+      !completedDateTime ||
+      isNaN(claimedDate.getTime()) ||
+      isNaN(completedDateTime.getTime())
+    ) {
+      console.warn('Skipping task history: Invalid dates', {
+        claimedDate: task.claimedDate,
+        completedDate: task.completedDate,
+      });
+      return;
+    }
     const durationDays = Math.floor((completedDateTime.getTime() - claimedDate.getTime()) / (1000 * 60 * 60 * 24));
 
     const historyRow = [
       task.taskList,
       task.taskOwner,
-      completedDate,
+      effectiveCompletedDate || new Date().toISOString().split('T')[0],
       durationDays.toString(),
     ];
 
@@ -136,6 +163,19 @@ export class TasksService {
       console.error('Failed to add to task history:', error);
       // Don't fail the main operation if history update fails
     }
+  }
+
+  /**
+   * Resolve the completed date to persist. Returns an empty string when the task
+   * is not completed and no date is provided, otherwise returns the provided
+   * or current date in YYYY-MM-DD format.
+   */
+  private resolveCompletedDate(status?: string, completedDate?: string): string {
+    if (completedDate) return completedDate;
+    if (status === STATUS_COMPLETED) {
+      return new Date().toISOString().split('T')[0];
+    }
+    return '';
   }
 
   async getTaskHistory(): Promise<any[]> {

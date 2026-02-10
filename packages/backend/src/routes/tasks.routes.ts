@@ -54,7 +54,7 @@ export function createTasksRouter(tasksService: TasksService): Router {
   // Create task
   router.post('/', async (req: Request, res: Response) => {
     try {
-      const { taskList, taskOwner, status, claimedDate, dueDate, notes } = req.body;
+      const { taskList, taskOwner, status, claimedDate, dueDate, completedDate, notes } = req.body;
       
       if (!taskList) {
         return res.status(400).json({ error: 'Task name is required' });
@@ -66,6 +66,7 @@ export function createTasksRouter(tasksService: TasksService): Router {
         status: status || 'Not Started',
         claimedDate: claimedDate || new Date().toISOString().split('T')[0],
         dueDate: dueDate || '',
+        completedDate: completedDate || '',
         notes: notes || '',
       });
       

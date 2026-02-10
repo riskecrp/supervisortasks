@@ -2,8 +2,8 @@ export interface Task {
   id: string;
   taskList: string;
   taskOwner: string;
-  status: 'Not Started' | 'In Progress' | 'Completed' | 'Blocked';
-  claimedAssignedDate: string | null;
+  status: 'Assigned' | 'Not Started' | 'In Progress' | 'Completed' | 'Blocked';
+  claimedDate: string | null;
   dueDate: string | null;
   completedDate: string | null;
   notes: string;
