@@ -11,9 +11,12 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
 import { mockDiscussions } from '@/lib/mockData';
 import { Discussion } from '@/types';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, ChevronDown } from 'lucide-react';
 import { api } from '@/lib/api';
 
 export default function DiscussionsPage() {
@@ -22,22 +25,35 @@ export default function DiscussionsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchDiscussions() {
-      try {
-        const data = await api.discussions.getAll();
-        setDiscussions(data as Discussion[]);
-        setError(null);
-      } catch (err) {
-        console.error('Failed to fetch discussions:', err);
-        setError('Using mock data - backend not available');
-        // Keep using mock data as fallback
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
     fetchDiscussions();
   }, []);
+
+  async function fetchDiscussions() {
+    try {
+      const data = await api.discussions.getAll();
+      setDiscussions(data as Discussion[]);
+      setError(null);
+    } catch (err) {
+      console.error('Failed to fetch discussions:', err);
+      setError('Using mock data - backend not available');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function handleFeedbackToggle(
+    discussionId: string,
+    supervisorName: string,
+    currentValue: boolean
+  ) {
+    try {
+      await api.discussions.updateFeedback(discussionId, supervisorName, !currentValue);
+      await fetchDiscussions();
+    } catch (err: any) {
+      console.error('Failed to update feedback:', err);
+      alert(`Failed to update feedback: ${err.message || 'Unknown error'}`);
+    }
+  }
 
   return (
     <div className="p-8">
@@ -67,8 +83,9 @@ export default function DiscussionsPage() {
               </TableHeader>
               <TableBody>
                 {discussions.map((discussion) => {
-                  const totalSupervisors = Object.keys(discussion.supervisorFeedback).length;
-                  const responsesReceived = Object.values(discussion.supervisorFeedback).filter(Boolean).length;
+                  const supervisors = Object.entries(discussion.supervisorFeedback);
+                  const totalSupervisors = supervisors.length;
+                  const responsesReceived = supervisors.filter(([_, completed]) => completed).length;
                   
                   return (
                     <TableRow key={discussion.id}>
@@ -85,9 +102,45 @@ export default function DiscussionsPage() {
                         </a>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={responsesReceived === totalSupervisors ? 'success' : 'warning'}>
-                          {responsesReceived} / {totalSupervisors} Responses
-                        </Badge>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="outline" className="w-full justify-between">
+                              <Badge variant={responsesReceived === totalSupervisors ? 'success' : 'warning'}>
+                                {responsesReceived} / {totalSupervisors} Responses
+                              </Badge>
+                              <ChevronDown className="h-4 w-4 ml-2" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-80">
+                            <div className="space-y-4">
+                              <div>
+                                <h4 className="font-medium text-sm mb-2">Supervisor Responses</h4>
+                                <p className="text-xs text-muted-foreground mb-3">
+                                  Check off supervisors who have provided feedback
+                                </p>
+                              </div>
+                              <div className="space-y-2 max-h-60 overflow-y-auto">
+                                {supervisors.map(([name, completed]) => (
+                                  <div key={name} className="flex items-center space-x-2">
+                                    <Checkbox
+                                      id={`${discussion.id}-${name}`}
+                                      checked={completed}
+                                      onCheckedChange={() =>
+                                        handleFeedbackToggle(discussion.id, name, completed)
+                                      }
+                                    />
+                                    <label
+                                      htmlFor={`${discussion.id}-${name}`}
+                                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                                    >
+                                      {name}
+                                    </label>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
                       </TableCell>
                     </TableRow>
                   );
