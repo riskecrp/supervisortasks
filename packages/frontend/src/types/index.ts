@@ -23,6 +23,8 @@ export interface Supervisor {
   isOnLOA: boolean;
   loaStartDate: string | null;
   loaEndDate: string | null;
+  totalTasksCompleted: number;
+  monthlyTasksCompleted: number;
 }
 
 export interface LOARecord {

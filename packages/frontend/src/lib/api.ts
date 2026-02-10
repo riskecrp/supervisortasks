@@ -61,13 +61,16 @@ export const api = {
     create: (discussion: any) => fetchApi('/api/discussions', { method: 'POST', body: discussion }),
     update: (id: string, updates: any) => fetchApi(`/api/discussions/${id}`, { method: 'PUT', body: updates }),
     delete: (id: string) => fetchApi(`/api/discussions/${id}`, { method: 'DELETE' }),
+    updateFeedback: (id: string, supervisorName: string, completed: boolean) => 
+      fetchApi(`/api/discussions/${id}/feedback`, { 
+        method: 'PUT', 
+        body: { supervisorName, completed } 
+      }),
   },
   supervisors: {
     getAll: () => fetchApi('/api/supervisors'),
-    getById: (id: string) => fetchApi(`/api/supervisors/${id}`),
-    create: (supervisor: any) => fetchApi('/api/supervisors', { method: 'POST', body: supervisor }),
-    update: (id: string, updates: any) => fetchApi(`/api/supervisors/${id}`, { method: 'PUT', body: updates }),
-    delete: (id: string) => fetchApi(`/api/supervisors/${id}`, { method: 'DELETE' }),
+    add: (supervisor: { name: string; rank?: string }) => fetchApi('/api/supervisors', { method: 'POST', body: supervisor }),
+    remove: (name: string) => fetchApi(`/api/supervisors/${encodeURIComponent(name)}`, { method: 'DELETE' }),
   },
   loa: {
     getAll: () => fetchApi('/api/loa'),

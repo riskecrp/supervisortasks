@@ -96,6 +96,8 @@ export const mockSupervisors: Supervisor[] = [
     isOnLOA: false,
     loaStartDate: null,
     loaEndDate: null,
+    totalTasksCompleted: 12,
+    monthlyTasksCompleted: 3,
   },
   {
     name: 'Sarah Johnson',
@@ -103,6 +105,8 @@ export const mockSupervisors: Supervisor[] = [
     isOnLOA: false,
     loaStartDate: null,
     loaEndDate: null,
+    totalTasksCompleted: 8,
+    monthlyTasksCompleted: 2,
   },
   {
     name: 'Mike Davis',
@@ -110,6 +114,8 @@ export const mockSupervisors: Supervisor[] = [
     isOnLOA: true,
     loaStartDate: '2026-02-05',
     loaEndDate: '2026-02-20',
+    totalTasksCompleted: 15,
+    monthlyTasksCompleted: 1,
   },
   {
     name: 'Emily Brown',
@@ -117,5 +123,7 @@ export const mockSupervisors: Supervisor[] = [
     isOnLOA: false,
     loaStartDate: null,
     loaEndDate: null,
+    totalTasksCompleted: 10,
+    monthlyTasksCompleted: 4,
   },
 ];
