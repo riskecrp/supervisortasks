@@ -69,6 +69,8 @@ export class SupervisorsService {
       ).length;
 
       // Calculate monthly completed tasks (last 30 days)
+      // Note: Using claimedDate as proxy for completion date since the Tasks sheet
+      // doesn't have a dedicated completedDate field in the current schema
       const monthlyTasksCompleted = allTasks.filter(task => {
         if (task.taskOwner.trim() !== trimmedName || task.status.toLowerCase() !== 'completed') {
           return false;

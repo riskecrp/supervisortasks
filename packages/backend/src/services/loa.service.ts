@@ -96,7 +96,9 @@ export class LOAService {
         throw new Error('LOA record not found');
       }
       
-      // Get the supervisor name from the row (rowNumber - 1 because of 0-based indexing, but +1 for header = just rowNumber - 1)
+      // Get the supervisor name from the row
+      // rowNumber is 1-indexed (sheet row number), rows is 0-indexed with header at index 0
+      // So sheet row 2 (first data row) is at rows[1], hence rows[rowNumber - 1]
       const supervisorName = rows[rowNumber - 1][0];
       
       if (!supervisorName) {
