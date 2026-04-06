@@ -107,16 +107,16 @@ export default function TasksPage() {
     }
   }
 
-  // Active (non-completed) task count per supervisor, for the dropdown hint
-  const activeTaskCount = useMemo(() => {
-    const counts: Record<string, number> = {};
-    tasks.forEach(t => {
-      if (t.status !== 'Completed' && t.taskOwner) {
-        counts[t.taskOwner] = (counts[t.taskOwner] || 0) + 1;
-      }
-    });
-    return counts;
-  }, [tasks]);
+// Total task count per supervisor (all statuses), for the dropdown hint
+const activeTaskCount = useMemo(() => {
+  const counts: Record<string, number> = {};
+  tasks.forEach(t => {
+    if (t.taskOwner) {
+      counts[t.taskOwner] = (counts[t.taskOwner] || 0) + 1;
+    }
+  });
+  return counts;
+}, [tasks]);
 
   // Supervisors available for assignment (not on LOA), sorted lightest load first
   const availableSupervisors = useMemo(() =>
