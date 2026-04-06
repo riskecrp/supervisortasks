@@ -328,7 +328,7 @@ const activeTaskCount = useMemo(() => {
           <DialogHeader>
             <DialogTitle>New Task</DialogTitle>
             <DialogDescription>
-              Owners are sorted by current active task load — lightest first.
+              Owners are sorted by current total tasks completed — lightest first.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -353,7 +353,7 @@ const activeTaskCount = useMemo(() => {
                 <option value="">— Unassigned —</option>
                 {availableSupervisors.map(s => (
                   <option key={s.name} value={s.name}>
-                    {s.name} ({activeTaskCount[s.name] || 0} active tasks)
+                    {s.name} ({activeTaskCount[s.name] || 0} total tasks)
                   </option>
                 ))}
               </select>
