@@ -1,32 +1,22 @@
 "use client"
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { mockDiscussions } from '@/lib/mockData';
 import { Discussion } from '@/types';
-import { ExternalLink, ChevronDown, Plus } from 'lucide-react';
+import { ExternalLink, ChevronDown, Plus, ArrowUp, ArrowDown } from 'lucide-react';
 import { api } from '@/lib/api';
 
 const emptyForm = {
@@ -39,13 +29,12 @@ export default function DiscussionsPage() {
   const [discussions, setDiscussions] = useState<Discussion[]>(mockDiscussions);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sortAsc, setSortAsc] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [formData, setFormData] = useState(emptyForm);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    fetchDiscussions();
-  }, []);
+  useEffect(() => { fetchDiscussions(); }, []);
 
   async function fetchDiscussions() {
     try {
@@ -54,17 +43,13 @@ export default function DiscussionsPage() {
       setError(null);
     } catch (err) {
       console.error('Failed to fetch discussions:', err);
-      setError('Using mock data - backend not available');
+      setError('Using mock data – backend not available');
     } finally {
       setIsLoading(false);
     }
   }
 
-  async function handleFeedbackToggle(
-    discussionId: string,
-    supervisorName: string,
-    currentValue: boolean
-  ) {
+  async function handleFeedbackToggle(discussionId: string, supervisorName: string, currentValue: boolean) {
     try {
       await api.discussions.updateFeedback(discussionId, supervisorName, !currentValue);
       await fetchDiscussions();
@@ -75,10 +60,7 @@ export default function DiscussionsPage() {
   }
 
   async function handleAddDiscussion() {
-    if (!formData.topic.trim()) {
-      alert('Topic is required.');
-      return;
-    }
+    if (!formData.topic.trim()) { alert('Topic is required.'); return; }
     setIsSubmitting(true);
     try {
       await api.discussions.create({
@@ -98,45 +80,67 @@ export default function DiscussionsPage() {
     }
   }
 
+  // Sort by datePosted; fall back to id order if dates are equal
+  const sortedDiscussions = useMemo(() => {
+    return [...discussions].sort((a, b) => {
+      const dateA = a.datePosted ? new Date(a.datePosted).getTime() : 0;
+      const dateB = b.datePosted ? new Date(b.datePosted).getTime() : 0;
+      const diff = dateA - dateB;
+      if (diff !== 0) return sortAsc ? diff : -diff;
+      // Fall back to id numeric order
+      const idA = parseInt(a.id.replace(/\D/g, '')) || 0;
+      const idB = parseInt(b.id.replace(/\D/g, '')) || 0;
+      return sortAsc ? idA - idB : idB - idA;
+    });
+  }, [discussions, sortAsc]);
+
   return (
     <div className="p-8">
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center flex-wrap gap-3">
             <CardTitle>Discussions</CardTitle>
-            <Button onClick={() => setIsAddDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              New Discussion
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSortAsc(p => !p)}
+                title={sortAsc ? 'Showing oldest first' : 'Showing newest first'}
+              >
+                {sortAsc ? <ArrowUp className="h-4 w-4 mr-1" /> : <ArrowDown className="h-4 w-4 mr-1" />}
+                {sortAsc ? 'Oldest first' : 'Newest first'}
+              </Button>
+              <Button onClick={() => setIsAddDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                New Discussion
+              </Button>
+            </div>
           </div>
-          {error && (
-            <p className="text-sm text-muted-foreground mt-2">⚠️ {error}</p>
-          )}
+          {error && <p className="text-sm text-muted-foreground mt-2">⚠️ {error}</p>}
         </CardHeader>
+
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Loading discussions...
-            </div>
+            <div className="text-center py-8 text-muted-foreground">Loading discussions…</div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Date Posted</TableHead>
                   <TableHead>Topic</TableHead>
-                  <TableHead>Direct Link</TableHead>
+                  <TableHead>Link</TableHead>
                   <TableHead>Supervisor Responses</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {discussions.map((discussion) => {
+                {sortedDiscussions.map(discussion => {
                   const supervisors = Object.entries(discussion.supervisorFeedback);
-                  const totalSupervisors = supervisors.length;
-                  const responsesReceived = supervisors.filter(([_, completed]) => completed).length;
+                  const total = supervisors.length;
+                  const received = supervisors.filter(([, done]) => done).length;
 
                   return (
                     <TableRow key={discussion.id}>
-                      <TableCell>{discussion.datePosted}</TableCell>
+                      <TableCell className="whitespace-nowrap">{discussion.datePosted}</TableCell>
                       <TableCell className="font-medium">{discussion.topic}</TableCell>
                       <TableCell>
                         {discussion.link ? (
@@ -153,14 +157,14 @@ export default function DiscussionsPage() {
                         )}
                       </TableCell>
                       <TableCell>
-                        {totalSupervisors === 0 ? (
+                        {total === 0 ? (
                           <span className="text-muted-foreground text-sm">No supervisors assigned</span>
                         ) : (
                           <Popover>
                             <PopoverTrigger asChild>
                               <Button variant="outline" className="w-full justify-between">
-                                <Badge variant={responsesReceived === totalSupervisors ? 'success' : 'warning'}>
-                                  {responsesReceived} / {totalSupervisors} Responses
+                                <Badge variant={received === total ? 'success' : 'warning'}>
+                                  {received} / {total} Responses
                                 </Badge>
                                 <ChevronDown className="h-4 w-4 ml-2" />
                               </Button>
@@ -168,9 +172,9 @@ export default function DiscussionsPage() {
                             <PopoverContent className="w-80">
                               <div className="space-y-4">
                                 <div>
-                                  <h4 className="font-medium text-sm mb-2">Supervisor Responses</h4>
-                                  <p className="text-xs text-muted-foreground mb-3">
-                                    Check off supervisors who have provided feedback
+                                  <h4 className="font-medium text-sm mb-1">Supervisor Responses</h4>
+                                  <p className="text-xs text-muted-foreground">
+                                    Check off supervisors who have responded
                                   </p>
                                 </div>
                                 <div className="space-y-2 max-h-60 overflow-y-auto">
@@ -185,7 +189,7 @@ export default function DiscussionsPage() {
                                       />
                                       <label
                                         htmlFor={`${discussion.id}-${name}`}
-                                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                                        className="text-sm font-medium cursor-pointer"
                                       >
                                         {name}
                                       </label>
@@ -206,13 +210,13 @@ export default function DiscussionsPage() {
         </CardContent>
       </Card>
 
-      {/* Add Discussion Dialog */}
+      {/* ── Add Discussion Dialog ── */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>New Discussion</DialogTitle>
             <DialogDescription>
-              Add a new discussion. Supervisor feedback columns will be added automatically based on your spreadsheet headers.
+              Supervisor feedback columns are added automatically from your spreadsheet headers.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -221,7 +225,7 @@ export default function DiscussionsPage() {
               <Input
                 id="topic"
                 value={formData.topic}
-                onChange={(e) => setFormData({ ...formData, topic: e.target.value })}
+                onChange={e => setFormData({ ...formData, topic: e.target.value })}
                 placeholder="Discussion topic or title"
               />
             </div>
@@ -231,7 +235,7 @@ export default function DiscussionsPage() {
                 id="datePosted"
                 type="date"
                 value={formData.datePosted}
-                onChange={(e) => setFormData({ ...formData, datePosted: e.target.value })}
+                onChange={e => setFormData({ ...formData, datePosted: e.target.value })}
               />
             </div>
             <div className="grid gap-2">
@@ -240,8 +244,8 @@ export default function DiscussionsPage() {
                 id="link"
                 type="url"
                 value={formData.link}
-                onChange={(e) => setFormData({ ...formData, link: e.target.value })}
-                placeholder="https://..."
+                onChange={e => setFormData({ ...formData, link: e.target.value })}
+                placeholder="https://…"
               />
             </div>
           </div>
@@ -250,7 +254,7 @@ export default function DiscussionsPage() {
               Cancel
             </Button>
             <Button onClick={handleAddDiscussion} disabled={isSubmitting}>
-              {isSubmitting ? 'Adding...' : 'Add Discussion'}
+              {isSubmitting ? 'Adding…' : 'Add Discussion'}
             </Button>
           </DialogFooter>
         </DialogContent>
