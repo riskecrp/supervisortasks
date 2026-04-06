@@ -48,8 +48,7 @@ export default function LOAPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validate dates
+
     if (formData.startDate && formData.endDate) {
       const start = new Date(formData.startDate);
       const end = new Date(formData.endDate);
@@ -58,7 +57,7 @@ export default function LOAPage() {
         return;
       }
     }
-    
+
     try {
       if (editingRecord) {
         await api.loa.update(editingRecord.id, formData);
@@ -68,13 +67,7 @@ export default function LOAPage() {
       await fetchLOARecords();
       setShowForm(false);
       setEditingRecord(null);
-      setFormData({
-        supervisorName: '',
-        startDate: '',
-        endDate: '',
-        reason: '',
-        status: 'Active',
-      });
+      setFormData({ supervisorName: '', startDate: '', endDate: '', reason: '', status: 'Active' });
     } catch (err) {
       console.error('Failed to save LOA record:', err);
       alert('Failed to save LOA record. Please check your input and try again.');
@@ -94,9 +87,7 @@ export default function LOAPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this LOA record?')) {
-      return;
-    }
+    if (!confirm('Are you sure you want to delete this LOA record?')) return;
     try {
       await api.loa.delete(id);
       await fetchLOARecords();
@@ -109,14 +100,10 @@ export default function LOAPage() {
   const handleCancel = () => {
     setShowForm(false);
     setEditingRecord(null);
-    setFormData({
-      supervisorName: '',
-      startDate: '',
-      endDate: '',
-      reason: '',
-      status: 'Active',
-    });
+    setFormData({ supervisorName: '', startDate: '', endDate: '', reason: '', status: 'Active' });
   };
+
+  const inputClass = "w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring";
 
   return (
     <div className="p-8">
@@ -127,7 +114,7 @@ export default function LOAPage() {
             {!showForm && (
               <button
                 onClick={() => setShowForm(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity"
+                className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity text-sm font-medium"
               >
                 <Plus className="h-4 w-4" />
                 Add LOA
@@ -135,76 +122,70 @@ export default function LOAPage() {
             )}
           </div>
           {error && (
-            <p className="text-sm text-red-600 mt-2">
-              ⚠️ {error}
-            </p>
+            <p className="text-sm text-red-500 mt-2">⚠️ {error}</p>
           )}
         </CardHeader>
         <CardContent>
           {showForm && (
-            <form onSubmit={handleSubmit} className="mb-6 p-4 border rounded-lg bg-muted/50">
-              <h3 className="text-lg font-semibold mb-4">
+            <form onSubmit={handleSubmit} className="mb-6 p-4 border border-border rounded-lg bg-muted/30">
+              <h3 className="text-lg font-semibold mb-4 text-foreground">
                 {editingRecord ? 'Edit LOA Record' : 'Add New LOA Record'}
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Supervisor Name <span className="text-red-600">*</span>
+                  <label className="block text-sm font-medium mb-1 text-foreground">
+                    Supervisor Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     required
                     value={formData.supervisorName}
                     onChange={(e) => setFormData({ ...formData, supervisorName: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg bg-white"
+                    className={inputClass}
                     placeholder="Enter supervisor name"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Status
-                  </label>
+                  <label className="block text-sm font-medium mb-1 text-foreground">Status</label>
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value as LOARecord['status'] })}
-                    className="w-full px-3 py-2 border rounded-lg bg-white"
+                    className={inputClass}
                   >
                     <option value="Active">Active</option>
                     <option value="Completed">Completed</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Start Date <span className="text-red-600">*</span>
+                  <label className="block text-sm font-medium mb-1 text-foreground">
+                    Start Date <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="date"
                     required
                     value={formData.startDate}
                     onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg bg-white"
+                    className={inputClass}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">
-                    End Date <span className="text-red-600">*</span>
+                  <label className="block text-sm font-medium mb-1 text-foreground">
+                    End Date <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="date"
                     required
                     value={formData.endDate}
                     onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg bg-white"
+                    className={inputClass}
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium mb-1">
-                    Reason
-                  </label>
+                  <label className="block text-sm font-medium mb-1 text-foreground">Reason</label>
                   <textarea
                     value={formData.reason}
                     onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg bg-white"
+                    className={inputClass + " resize-y"}
                     placeholder="Enter reason (optional)"
                     rows={3}
                   />
@@ -213,14 +194,14 @@ export default function LOAPage() {
               <div className="flex gap-2 mt-4">
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity"
+                  className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity text-sm font-medium"
                 >
                   {editingRecord ? 'Update' : 'Create'}
                 </button>
                 <button
                   type="button"
                   onClick={handleCancel}
-                  className="px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:opacity-90 transition-opacity"
+                  className="px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:opacity-90 transition-opacity text-sm font-medium"
                 >
                   Cancel
                 </button>
@@ -229,9 +210,7 @@ export default function LOAPage() {
           )}
 
           {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Loading LOA records...
-            </div>
+            <div className="text-center py-8 text-muted-foreground">Loading LOA records...</div>
           ) : loaRecords.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               No LOA records found. Click &quot;Add LOA&quot; to create one.
@@ -264,14 +243,14 @@ export default function LOAPage() {
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleEdit(record)}
-                          className="p-1 hover:bg-muted rounded"
+                          className="p-1 hover:bg-muted rounded text-foreground"
                           title="Edit"
                         >
                           <Edit2 className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(record.id)}
-                          className="p-1 hover:bg-muted rounded text-red-600"
+                          className="p-1 hover:bg-muted rounded text-destructive"
                           title="Delete"
                         >
                           <Trash2 className="h-4 w-4" />
