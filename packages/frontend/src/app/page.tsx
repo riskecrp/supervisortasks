@@ -10,9 +10,21 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { mockTasks } from '@/lib/mockData';
 import { Task } from '@/types';
 import { api } from '@/lib/api';
+import { Plus } from 'lucide-react';
 
 function isOverdue(dueDate: string | null, completedDate: string | null): boolean {
   if (!dueDate || completedDate) return false;
@@ -29,7 +41,6 @@ function getStaleTaskThresholdDays(): number {
 
 const STALE_TASK_THRESHOLD_DAYS = getStaleTaskThresholdDays();
 const MILLISECONDS_PER_DAY = 1000 * 60 * 60 * 24;
-const ROW_HIGHLIGHT_CLASS = 'bg-amber-100/60';
 
 function isStale(claimedDate: string | null, completedDate: string | null): boolean {
   if (!claimedDate || completedDate) return false;
@@ -46,8 +57,6 @@ function isStale(claimedDate: string | null, completedDate: string | null): bool
 
 const availableStatuses: Task['status'][] = ['Assigned', 'Not Started', 'In Progress', 'Completed', 'Blocked'];
 
-// Normalize incoming task data, keeping compatibility with legacy claimedAssignedDate
-// until all backends return claimedDate consistently.
 const normalizeTask = (
   task: Partial<Task> & { claimedAssignedDate?: string | null }
 ): Task => {
@@ -71,56 +80,85 @@ const normalizeTask = (
   };
 };
 
+const emptyForm = {
+  taskList: '',
+  taskOwner: '',
+  status: 'Assigned' as Task['status'],
+  claimedDate: '',
+  dueDate: '',
+  notes: '',
+};
+
 export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>(mockTasks);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCompleted, setShowCompleted] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [formData, setFormData] = useState(emptyForm);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    async function fetchTasks() {
-      try {
-        const data = await api.tasks.getAll();
-        const normalized = Array.isArray(data) ? data.map(normalizeTask) : [];
-        setTasks(normalized.length ? normalized : mockTasks);
-        setError(null);
-      } catch (err) {
-        console.error('Failed to fetch tasks:', err);
-        setError('Using mock data - backend not available');
-        // Keep using mock data as fallback
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
     fetchTasks();
   }, []);
+
+  async function fetchTasks() {
+    try {
+      const data = await api.tasks.getAll();
+      const normalized = Array.isArray(data) ? data.map(normalizeTask) : [];
+      setTasks(normalized.length ? normalized : mockTasks);
+      setError(null);
+    } catch (err) {
+      console.error('Failed to fetch tasks:', err);
+      setError('Using mock data - backend not available');
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   const handleStatusChange = async (taskId: string, newStatus: Task['status']) => {
     try {
       const completedDate =
         newStatus === 'Completed' ? new Date().toISOString().split('T')[0] : '';
 
-      const updated = await api.tasks.update(taskId, {
-        status: newStatus,
-        completedDate,
-      });
+      const updated = await api.tasks.update(taskId, { status: newStatus, completedDate });
       const normalized = normalizeTask(updated);
-      
-      // Update local state
-      setTasks(prevTasks => 
-        prevTasks.map(task => 
-          task.id === taskId ? normalized : task
-        )
-      );
+      setTasks(prev => prev.map(t => (t.id === taskId ? normalized : t)));
     } catch (err) {
       console.error('Failed to update task status:', err);
       alert('Failed to update task status. Please check your connection and try again.');
     }
   };
 
-  const filteredTasks = showCompleted 
-    ? tasks 
+  const handleAddTask = async () => {
+    if (!formData.taskList.trim()) {
+      alert('Task name is required.');
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      await api.tasks.create({
+        taskList: formData.taskList.trim(),
+        taskOwner: formData.taskOwner.trim(),
+        status: formData.status,
+        claimedDate: formData.claimedDate || null,
+        dueDate: formData.dueDate || null,
+        completedDate: null,
+        notes: formData.notes.trim(),
+      });
+      setIsAddDialogOpen(false);
+      setFormData(emptyForm);
+      await fetchTasks();
+    } catch (err) {
+      console.error('Failed to create task:', err);
+      alert('Failed to create task. Please check your connection and try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const filteredTasks = showCompleted
+    ? tasks
     : tasks.filter(task => task.status !== 'Completed');
 
   return (
@@ -129,27 +167,29 @@ export default function TasksPage() {
         <CardHeader>
           <div className="flex justify-between items-center">
             <CardTitle>Tasks</CardTitle>
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <input
-                type="checkbox"
-                checked={showCompleted}
-                onChange={(e) => setShowCompleted(e.target.checked)}
-                className="w-4 h-4 rounded border-gray-300"
-              />
-              Show completed tasks
-            </label>
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 text-sm cursor-pointer text-foreground">
+                <input
+                  type="checkbox"
+                  checked={showCompleted}
+                  onChange={(e) => setShowCompleted(e.target.checked)}
+                  className="w-4 h-4 rounded border-border"
+                />
+                Show completed tasks
+              </label>
+              <Button onClick={() => setIsAddDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                New Task
+              </Button>
+            </div>
           </div>
           {error && (
-            <p className="text-sm text-muted-foreground mt-2">
-              ⚠️ {error}
-            </p>
+            <p className="text-sm text-muted-foreground mt-2">⚠️ {error}</p>
           )}
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Loading tasks...
-            </div>
+            <div className="text-center py-8 text-muted-foreground">Loading tasks...</div>
           ) : (
             <Table>
               <TableHeader>
@@ -169,8 +209,13 @@ export default function TasksPage() {
                   const stale = isStale(task.claimedDate, task.completedDate);
                   const highlight = overdue || stale;
                   return (
-                    <TableRow key={task.id} className={highlight ? ROW_HIGHLIGHT_CLASS : ''}>
-                      <TableCell className={highlight ? 'text-amber-900 font-semibold' : ''}>
+                    <TableRow
+                      key={task.id}
+                      style={highlight ? { backgroundColor: 'var(--warning-bg)' } : undefined}
+                    >
+                      <TableCell
+                        style={highlight ? { color: 'var(--warning-text)', fontWeight: 600 } : undefined}
+                      >
                         {task.taskList}
                       </TableCell>
                       <TableCell>{task.taskOwner}</TableCell>
@@ -178,19 +223,21 @@ export default function TasksPage() {
                         <select
                           value={task.status}
                           onChange={(e) => handleStatusChange(task.id, e.target.value as Task['status'])}
-                          className="px-2 py-1 rounded border border-gray-300 bg-white text-sm"
-                          >
+                          className="px-2 py-1 rounded border border-border bg-background text-foreground text-sm"
+                        >
                           {availableStatuses.map(status => (
-                            <option key={status} value={status}>
-                              {status}
-                            </option>
+                            <option key={status} value={status}>{status}</option>
                           ))}
                         </select>
                       </TableCell>
-                      <TableCell className={stale ? 'text-amber-900 font-medium' : ''}>
+                      <TableCell
+                        style={stale ? { color: 'var(--warning-text)', fontWeight: 500 } : undefined}
+                      >
                         {task.claimedDate || '-'}
                       </TableCell>
-                      <TableCell className={overdue ? 'text-amber-900 font-medium' : ''}>
+                      <TableCell
+                        style={overdue ? { color: 'var(--warning-text)', fontWeight: 500 } : undefined}
+                      >
                         {task.dueDate || '-'}
                       </TableCell>
                       <TableCell>{task.completedDate || '-'}</TableCell>
@@ -203,6 +250,89 @@ export default function TasksPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Add Task Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>New Task</DialogTitle>
+            <DialogDescription>
+              Add a new task to the spreadsheet. Required fields are marked with *.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="taskList">Task Name *</Label>
+              <Input
+                id="taskList"
+                value={formData.taskList}
+                onChange={(e) => setFormData({ ...formData, taskList: e.target.value })}
+                placeholder="Enter task name"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="taskOwner">Task Owner</Label>
+              <Input
+                id="taskOwner"
+                value={formData.taskOwner}
+                onChange={(e) => setFormData({ ...formData, taskOwner: e.target.value })}
+                placeholder="Enter owner name"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="status">Status</Label>
+              <select
+                id="status"
+                value={formData.status}
+                onChange={(e) => setFormData({ ...formData, status: e.target.value as Task['status'] })}
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm"
+              >
+                {availableStatuses.map(s => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="claimedDate">Claimed/Assigned Date</Label>
+                <Input
+                  id="claimedDate"
+                  type="date"
+                  value={formData.claimedDate}
+                  onChange={(e) => setFormData({ ...formData, claimedDate: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="dueDate">Due Date</Label>
+                <Input
+                  id="dueDate"
+                  type="date"
+                  value={formData.dueDate}
+                  onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="notes">Notes</Label>
+              <textarea
+                id="notes"
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm min-h-[80px] resize-y"
+                placeholder="Optional notes"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setIsAddDialogOpen(false); setFormData(emptyForm); }}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddTask} disabled={isSubmitting}>
+              {isSubmitting ? 'Adding...' : 'Add Task'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
