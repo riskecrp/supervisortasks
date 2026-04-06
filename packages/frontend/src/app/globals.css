@@ -1,24 +1,96 @@
 @import "tailwindcss";
 
-@theme {
-  --color-background: #f8f9fa;
-  --color-foreground: #333333;
-  --color-card: #ffffff;
-  --color-card-foreground: #333333;
-  --color-popover: #ffffff;
-  --color-popover-foreground: #333333;
-  --color-primary: #4a5568;
-  --color-primary-foreground: #ffffff;
-  --color-secondary: #e2e8f0;
-  --color-secondary-foreground: #4a5568;
-  --color-muted: #e2e8f0;
-  --color-muted-foreground: #64748b;
-  --color-accent: #e2e8f0;
-  --color-accent-foreground: #4a5568;
-  --color-destructive: #dc2626;
-  --color-destructive-foreground: #ffffff;
-  --color-border: #cbd5e0;
-  --color-input: #cbd5e0;
-  --color-ring: #4a5568;
+/* Enable class-based dark mode for next-themes */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Light mode tokens */
+:root {
+  --background: #f4f6f8;
+  --foreground: #1a202c;
+  --card: #ffffff;
+  --card-foreground: #1a202c;
+  --popover: #ffffff;
+  --popover-foreground: #1a202c;
+  --primary: #3b5bdb;
+  --primary-foreground: #ffffff;
+  --secondary: #e9ecef;
+  --secondary-foreground: #495057;
+  --muted: #e9ecef;
+  --muted-foreground: #6c757d;
+  --accent: #dde3f8;
+  --accent-foreground: #3b5bdb;
+  --destructive: #e03131;
+  --destructive-foreground: #ffffff;
+  --border: #dee2e6;
+  --input: #dee2e6;
+  --ring: #3b5bdb;
   --radius: 0.5rem;
+  --warning-bg: #fff3cd;
+  --warning-text: #92400e;
+  --success-bg: #d1fae5;
+  --success-text: #065f46;
+}
+
+/* Dark mode tokens */
+.dark {
+  --background: #0f1117;
+  --foreground: #e5e7eb;
+  --card: #1a1d27;
+  --card-foreground: #e5e7eb;
+  --popover: #1a1d27;
+  --popover-foreground: #e5e7eb;
+  --primary: #5c7cfa;
+  --primary-foreground: #ffffff;
+  --secondary: #2a2d3a;
+  --secondary-foreground: #adb5bd;
+  --muted: #2a2d3a;
+  --muted-foreground: #868e96;
+  --accent: #2c3270;
+  --accent-foreground: #a5b4fc;
+  --destructive: #f03e3e;
+  --destructive-foreground: #ffffff;
+  --border: #2e3347;
+  --input: #2e3347;
+  --ring: #5c7cfa;
+  --warning-bg: #422006;
+  --warning-text: #fbbf24;
+  --success-bg: #064e3b;
+  --success-text: #34d399;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius: var(--radius);
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Utility for stale/overdue highlight that respects dark mode */
+.row-highlight {
+  background-color: var(--warning-bg);
+}
+.row-highlight td {
+  color: var(--warning-text);
 }
