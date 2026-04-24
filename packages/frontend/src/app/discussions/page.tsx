@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { mockDiscussions } from '@/lib/mockData';
 import { Discussion } from '@/types';
-import { ExternalLink, ChevronDown, Plus, ArrowUp, ArrowDown } from 'lucide-react';
+import { ExternalLink, ChevronDown, Plus, ArrowUp, ArrowDown, Trash2 } from 'lucide-react';
 import { api } from '@/lib/api';
 
 const emptyForm = {
@@ -116,6 +116,18 @@ export default function DiscussionsPage() {
     }
   }
 
+  async function handleDeleteDiscussion(id: string, topic: string) {
+    if (!confirm(`Delete "${topic}"? This cannot be undone.`)) return;
+    setDiscussions(prev => prev.filter(d => d.id !== id));
+    try {
+      await api.discussions.delete(id);
+    } catch (err) {
+      console.error("Failed to delete discussion:", err);
+      alert("Failed to delete discussion. Please refresh and try again.");
+      await fetchDiscussions();
+    }
+  }
+
   // Sort by datePosted; fall back to id order if dates are equal
   const sortedDiscussions = useMemo(() => {
     return [...discussions].sort((a, b) => {
@@ -165,6 +177,7 @@ export default function DiscussionsPage() {
                   <TableHead>Topic</TableHead>
                   <TableHead>Link</TableHead>
                   <TableHead>Supervisor Responses</TableHead>
+                  <TableHead></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -238,6 +251,16 @@ export default function DiscussionsPage() {
                             </PopoverContent>
                           </Popover>
                         )}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteDiscussion(discussion.id, discussion.topic)}
+                          title="Delete discussion"
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   );
