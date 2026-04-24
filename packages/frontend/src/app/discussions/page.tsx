@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -29,7 +29,8 @@ export default function DiscussionsPage() {
   const [discussions, setDiscussions] = useState<Discussion[]>(mockDiscussions);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sortAsc, setSortAsc] = useState(true);
+  // Default: newest first (false = descending)
+  const [sortAsc, setSortAsc] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [formData, setFormData] = useState(emptyForm);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -49,15 +50,50 @@ export default function DiscussionsPage() {
     }
   }
 
-  async function handleFeedbackToggle(discussionId: string, supervisorName: string, currentValue: boolean) {
+  // Optimistic update: flip the checkbox immediately in local state,
+  // write to the sheet in the background, revert only if it fails.
+  const handleFeedbackToggle = useCallback(async (
+    discussionId: string,
+    supervisorName: string,
+    currentValue: boolean,
+  ) => {
+    const newValue = !currentValue;
+
+    // 1. Apply optimistic update — UI responds instantly
+    setDiscussions(prev =>
+      prev.map(d => {
+        if (d.id !== discussionId) return d;
+        return {
+          ...d,
+          supervisorFeedback: {
+            ...d.supervisorFeedback,
+            [supervisorName]: newValue,
+          },
+        };
+      })
+    );
+
+    // 2. Persist to Google Sheet
     try {
-      await api.discussions.updateFeedback(discussionId, supervisorName, !currentValue);
-      await fetchDiscussions();
+      await api.discussions.updateFeedback(discussionId, supervisorName, newValue);
     } catch (err: any) {
+      // 3. Revert on failure so the sheet and UI stay in sync
       console.error('Failed to update feedback:', err);
-      alert(`Failed to update feedback: ${err.message || 'Unknown error'}`);
+      setDiscussions(prev =>
+        prev.map(d => {
+          if (d.id !== discussionId) return d;
+          return {
+            ...d,
+            supervisorFeedback: {
+              ...d.supervisorFeedback,
+              [supervisorName]: currentValue,
+            },
+          };
+        })
+      );
+      alert(`Failed to save feedback for ${supervisorName}. Changes have been reverted.`);
     }
-  }
+  }, []);
 
   async function handleAddDiscussion() {
     if (!formData.topic.trim()) { alert('Topic is required.'); return; }
@@ -87,7 +123,6 @@ export default function DiscussionsPage() {
       const dateB = b.datePosted ? new Date(b.datePosted).getTime() : 0;
       const diff = dateA - dateB;
       if (diff !== 0) return sortAsc ? diff : -diff;
-      // Fall back to id numeric order
       const idA = parseInt(a.id.replace(/\D/g, '')) || 0;
       const idB = parseInt(b.id.replace(/\D/g, '')) || 0;
       return sortAsc ? idA - idB : idB - idA;
@@ -105,7 +140,7 @@ export default function DiscussionsPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setSortAsc(p => !p)}
-                title={sortAsc ? 'Showing oldest first' : 'Showing newest first'}
+                title={sortAsc ? 'Showing oldest first — click to reverse' : 'Showing newest first — click to reverse'}
               >
                 {sortAsc ? <ArrowUp className="h-4 w-4 mr-1" /> : <ArrowDown className="h-4 w-4 mr-1" />}
                 {sortAsc ? 'Oldest first' : 'Newest first'}
@@ -169,7 +204,7 @@ export default function DiscussionsPage() {
                                 <ChevronDown className="h-4 w-4 ml-2" />
                               </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-80">
+                            <PopoverContent className="w-80" onInteractOutside={e => e.preventDefault()}>
                               <div className="space-y-4">
                                 <div>
                                   <h4 className="font-medium text-sm mb-1">Supervisor Responses</h4>
@@ -177,9 +212,9 @@ export default function DiscussionsPage() {
                                     Check off supervisors who have responded
                                   </p>
                                 </div>
-                                <div className="space-y-2 max-h-60 overflow-y-auto">
+                                <div className="space-y-3 max-h-60 overflow-y-auto">
                                   {supervisors.map(([name, completed]) => (
-                                    <div key={name} className="flex items-center space-x-2">
+                                    <div key={name} className="flex items-center space-x-3">
                                       <Checkbox
                                         id={`${discussion.id}-${name}`}
                                         checked={completed}
@@ -189,10 +224,13 @@ export default function DiscussionsPage() {
                                       />
                                       <label
                                         htmlFor={`${discussion.id}-${name}`}
-                                        className="text-sm font-medium cursor-pointer"
+                                        className="text-sm font-medium cursor-pointer select-none flex-1"
                                       >
                                         {name}
                                       </label>
+                                      {completed && (
+                                        <span className="text-xs text-green-600 dark:text-green-400">✓</span>
+                                      )}
                                     </div>
                                   ))}
                                 </div>
