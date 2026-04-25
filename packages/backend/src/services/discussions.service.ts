@@ -13,30 +13,28 @@ export class DiscussionsService {
 
   async getAllDiscussions(): Promise<Discussion[]> {
     const rows = await this.sheetsService.readRange(`${DISCUSSIONS_SHEET}!A:Z`);
-    
+
     if (rows.length === 0) {
       return [];
     }
 
-    // Filter out empty rows (skip header row)
-    const dataRows = rows.slice(1).filter(row => {
-      // Check if all values are empty/null/undefined
-      const allEmpty = row.every(cell => !cell || cell.toString().trim() === '');
-      // Check if the topic (second column) is empty
-      const topicEmpty = !row[1] || row[1].toString().trim() === '';
-      
-      // Row is valid if it's not completely empty AND has a topic
-      return !allEmpty && !topicEmpty;
-    });
+    // Track the actual sheet row number alongside each row, BEFORE filtering.
+    // rows[0] is the header (sheet row 1), so data rows start at sheet row 2.
+    const dataRows = rows.slice(1)
+      .map((row, i) => ({ row, sheetRow: i + 2 }))
+      .filter(({ row }) => {
+        const allEmpty = row.every(cell => !cell || cell.toString().trim() === '');
+        const topicEmpty = !row[1] || row[1].toString().trim() === '';
+        return !allEmpty && !topicEmpty;
+      });
 
     // Get the headers from the Discussions sheet to map columns
-    // Note: These should match the full names from the Names tab
     const headers = rows[0];
     const discussionSupervisors = headers.slice(3).map(h => h ? h.toString().trim() : '').filter(Boolean);
 
-    return dataRows.map((row, index) => {
+    return dataRows.map(({ row, sheetRow }) => {
       const supervisorFeedback: Record<string, boolean> = {};
-      
+
       discussionSupervisors.forEach((supervisor, i) => {
         if (supervisor) {
           supervisorFeedback[supervisor] = row[3 + i] === 'TRUE' || row[3 + i] === true || row[3 + i] === 'YES';
@@ -44,7 +42,7 @@ export class DiscussionsService {
       });
 
       return {
-        id: `discussion-${index + 2}`,
+        id: `discussion-${sheetRow}`, // real spreadsheet row, not filtered index
         datePosted: row[0] || '',
         topic: row[1] || '',
         link: row[2] || '',
@@ -75,30 +73,38 @@ export class DiscussionsService {
     });
 
     await this.sheetsService.appendRange(`${DISCUSSIONS_SHEET}!A:Z`, [newRow]);
-    
+
     const discussions = await this.getAllDiscussions();
     return discussions[discussions.length - 1];
   }
 
   async updateDiscussionFeedback(id: string, supervisorName: string, completed: boolean): Promise<Discussion> {
     const rowNumber = parseInt(id.split('-')[1]);
+    if (!rowNumber || isNaN(rowNumber)) {
+      throw new Error(`Invalid discussion id: ${id}`);
+    }
+
     const rows = await this.sheetsService.readRange(`${DISCUSSIONS_SHEET}!A:Z`);
-    
+
     if (rows.length === 0) {
       throw new Error('No discussions found');
     }
 
+    // Trim both sides so trailing/leading spaces in the header don't break the lookup
     const headers = rows[0];
-const trimmedHeaders = headers.map((h: any) => h ? h.toString().trim() : '');
-const supervisorIndex = trimmedHeaders.indexOf(supervisorName.trim());
+    const trimmedHeaders = headers.map((h: any) => h ? h.toString().trim() : '');
+    const supervisorIndex = trimmedHeaders.indexOf(supervisorName.trim());
 
-if (supervisorIndex === -1) {
-  throw new Error(`Supervisor "${supervisorName}" not found in discussions sheet headers. Available: ${trimmedHeaders.slice(3).join(', ')}`);
-}
+    if (supervisorIndex === -1) {
+      throw new Error(
+        `Supervisor "${supervisorName}" not found in discussions sheet headers. ` +
+        `Available: ${trimmedHeaders.slice(3).join(', ')}`
+      );
+    }
 
     const columnLetter = this.numberToColumn(supervisorIndex + 1);
     const value = completed ? 'TRUE' : '';
-    
+
     await this.sheetsService.writeRange(
       `${DISCUSSIONS_SHEET}!${columnLetter}${rowNumber}`,
       [[value]]
@@ -106,18 +112,26 @@ if (supervisorIndex === -1) {
 
     const discussion = await this.getDiscussion(id);
     if (!discussion) {
-      throw new Error('Discussion not found');
+      throw new Error('Discussion not found after update');
     }
-    
+
     return discussion;
   }
 
   async deleteDiscussion(id: string): Promise<void> {
     const rowNumber = parseInt(id.split('-')[1]);
-    
+    if (!rowNumber || isNaN(rowNumber)) {
+      throw new Error(`Invalid discussion id: ${id}`);
+    }
+
     const allRows = await this.sheetsService.readRange(`${DISCUSSIONS_SHEET}!A:Z`);
+    // rowNumber is the actual sheet row (1-indexed); allRows[0] is the header row.
+    // So the array index of the row to remove is rowNumber - 1.
+    if (rowNumber - 1 >= allRows.length) {
+      throw new Error('Row to delete is out of range');
+    }
     allRows.splice(rowNumber - 1, 1);
-    
+
     await this.sheetsService.clearRange(`${DISCUSSIONS_SHEET}!A2:Z`);
     if (allRows.length > 1) {
       await this.sheetsService.writeRange(`${DISCUSSIONS_SHEET}!A2:Z`, allRows.slice(1));
@@ -144,7 +158,7 @@ if (supervisorIndex === -1) {
       return rows[0].slice(3).map(h => h ? h.toString().trim() : '').filter(Boolean);
     }
   }
-  
+
   async getSupervisorRanksFromNames(): Promise<Map<string, string>> {
     const rankMap = new Map<string, string>();
     try {
