@@ -89,11 +89,12 @@ export class DiscussionsService {
     }
 
     const headers = rows[0];
-    const supervisorIndex = headers.indexOf(supervisorName);
+const trimmedHeaders = headers.map((h: any) => h ? h.toString().trim() : '');
+const supervisorIndex = trimmedHeaders.indexOf(supervisorName.trim());
 
-    if (supervisorIndex === -1) {
-      throw new Error('Supervisor not found in discussions sheet');
-    }
+if (supervisorIndex === -1) {
+  throw new Error(`Supervisor "${supervisorName}" not found in discussions sheet headers. Available: ${trimmedHeaders.slice(3).join(', ')}`);
+}
 
     const columnLetter = this.numberToColumn(supervisorIndex + 1);
     const value = completed ? 'TRUE' : '';
